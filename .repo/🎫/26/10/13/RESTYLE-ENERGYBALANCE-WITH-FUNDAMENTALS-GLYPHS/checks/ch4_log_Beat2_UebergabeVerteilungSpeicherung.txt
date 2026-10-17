@@ -1,13 +1,33 @@
 Manim Community v0.21.0
 
-[10/14/26 18:38:04] INFO     Animation 0 : Using cached     cairo_renderer.py:92
+[10/14/26 18:48:16] INFO     Animation 0 : Using cached     cairo_renderer.py:92
                              data (hash :                                       
                              34895980_2665738392_140736853)                     
-Animation 0: FadeIn(Text('Übergabe, Verteilung, Speicherung')), etc.:   0%|          | 0/1 [00:00<?, ?it/s]                                                                                                           [10/14/26 18:38:06] INFO     Animation 1 : Using cached     cairo_renderer.py:92
+Animation 0: FadeIn(Text('Übergabe, Verteilung, Speicherung')), etc.:   0%|          | 0/1 [00:00<?, ?it/s]                                                                                                                               INFO     Animation 1 : Using cached     cairo_renderer.py:92
                              data (hash :                                       
                              2119445635_2339887947_23669525                     
                              14)                                                
-Animation 1: FadeIn(VGroup of 2 submobjects):   0%|          | 0/1 [00:00<?, ?it/s]                                                                                   Animation 2: Create(VGroup of 5 submobjects), etc.:   0%|          | 0/23 [00:00<?, ?it/s]Animation 2: Create(VGroup of 5 submobjects), etc.:  61%|██████    | 14/23 [00:00<00:00, 135.97it/s]                                                                                                    [10/14/26 18:38:07] INFO     Animation 2 : Partial      scene_file_writer.py:192
+Animation 1: FadeIn(VGroup of 2 submobjects):   0%|          | 0/1 [00:00<?, ?it/s]                                                                                   [10/14/26 18:48:17] INFO     Animation 2 : Using cached     cairo_renderer.py:92
+                             data (hash :                                       
+                             2119445635_4208035001_37084418                     
+                             20)                                                
+Animation 2: Create(VGroup of 5 submobjects), etc.:   0%|          | 0/1 [00:00<?, ?it/s]                                                                                                             INFO     Animation 3 : Using cached     cairo_renderer.py:92
+                             data (hash :                                       
+                             2119445635_2774432420_66801747                     
+                             8)                                                 
+Animation 3: FadeIn(VGroup of 7 submobjects), etc.:   0%|          | 0/1 [00:00<?, ?it/s]                                                                                         [10/14/26 18:48:18] INFO     Animation 4 : Using cached     cairo_renderer.py:92
+                             data (hash :                                       
+                             2119445635_634753385_347729342                     
+                             5)                                                 
+Animation 4: UpdateFromAlphaFunc(VGroup of 0 submobject), etc.:   0%|          | 0/1 [00:00<?, ?it/s]                                                                                                     [10/14/26 18:48:19] INFO     Animation 5 : Using cached     cairo_renderer.py:92
+                             data (hash :                                       
+                             2119445635_1459038015_32757844                     
+                             8)                                                 
+Animation 5: FadeOut(VGroup of 2 submobjects), etc.:   0%|          | 0/1 [00:00<?, ?it/s]                                                                                                              INFO     Animation 6 : Using cached     cairo_renderer.py:92
+                             data (hash :                                       
+                             2119445635_3056829328_57429800                     
+                             5)                                                 
+Animation 6: FadeIn(VGroup of 2 submobjects), etc.:   0%|          | 0/1 [00:00<?, ?it/s]                                                                                         Animation 7: FadeIn(VGroup of 7 submobjects), etc.:   0%|          | 0/18 [00:00<?, ?it/s]                                                                                          [10/14/26 18:48:20] INFO     Animation 7 : Partial      scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -17,9 +37,9 @@ Manim Community v0.21.0
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat2_Ueber                         
                              gabeVerteilungSpeicherung/                         
-                             2119445635_4208035001_3708                         
-                             441820.mp4'                                        
-Animation 3: FadeIn(VGroup of 7 submobjects), etc.:   0%|          | 0/12 [00:00<?, ?it/s]Animation 3: FadeIn(VGroup of 7 submobjects), etc.: 100%|██████████| 12/12 [00:00<00:00, 110.11it/s]                                                                                                    [10/14/26 18:38:08] INFO     Animation 3 : Partial      scene_file_writer.py:192
+                             2119445635_3510832809_3555                         
+                             658333.mp4'                                        
+Animation 8: Circumscribe(Group), etc.:   0%|          | 0/24 [00:00<?, ?it/s]Animation 8: Circumscribe(Group), etc.:  38%|███▊      | 9/24 [00:00<00:00, 78.48it/s]Animation 8: Circumscribe(Group), etc.:  71%|███████   | 17/24 [00:00<00:00, 71.52it/s]                                                                                       [10/14/26 18:48:21] INFO     Animation 8 : Partial      scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -29,9 +49,9 @@ Manim Community v0.21.0
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat2_Ueber                         
                              gabeVerteilungSpeicherung/                         
-                             2119445635_2774432420_6680                         
-                             17478.mp4'                                         
-Animation 4: UpdateFromAlphaFunc(VGroup of 0 submobject), etc.:   0%|          | 0/88 [00:00<?, ?it/s]Animation 4: UpdateFromAlphaFunc(VGroup of 0 submobject), etc.:  66%|██████▌   | 58/88 [00:00<00:00, 572.43it/s]                                                                                                                [10/14/26 18:38:09] INFO     Animation 4 : Partial      scene_file_writer.py:192
+                             2119445635_2004417000_2608                         
+                             79813.mp4'                                         
+Animation 9: Create(VMobject), etc.:   0%|          | 0/18 [00:00<?, ?it/s]Animation 9: Create(VMobject), etc.:  50%|█████     | 9/18 [00:00<00:00, 88.09it/s]Animation 9: Create(VMobject), etc.: 100%|██████████| 18/18 [00:00<00:00, 88.78it/s]                                                                                    [10/14/26 18:48:22] INFO     Animation 9 : Partial      scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -41,9 +61,9 @@ Manim Community v0.21.0
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat2_Ueber                         
                              gabeVerteilungSpeicherung/                         
-                             2119445635_634753385_34772                         
-                             93425.mp4'                                         
-Animation 5: FadeOut(VGroup of 2 submobjects), etc.:   0%|          | 0/3 [00:00<?, ?it/s]                                                                                          [10/14/26 18:38:12] INFO     Animation 5 : Partial      scene_file_writer.py:192
+                             2119445635_3348774556_1032                         
+                             27857.mp4'                                         
+Animation 10: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:   0%|          | 0/109 [00:00<?, ?it/s]Animation 10: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  10%|█         | 11/109 [00:00<00:00, 101.51it/s]Animation 10: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  20%|██        | 22/109 [00:00<00:00, 100.09it/s]Animation 10: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  30%|███       | 33/109 [00:00<00:00, 99.11it/s] Animation 10: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  39%|███▉      | 43/109 [00:00<00:00, 98.35it/s]Animation 10: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  49%|████▊     | 53/109 [00:00<00:00, 87.98it/s]Animation 10: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  57%|█████▋    | 62/109 [00:00<00:00, 87.95it/s]Animation 10: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  66%|██████▌   | 72/109 [00:00<00:00, 88.85it/s]Animation 10: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  75%|███████▌  | 82/109 [00:00<00:00, 89.16it/s]Animation 10: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  83%|████████▎ | 91/109 [00:00<00:00, 88.86it/s]Animation 10: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  92%|█████████▏| 100/109 [00:01<00:00, 88.30it/s]Animation 10: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.: 100%|██████████| 109/109 [00:01<00:00, 87.90it/s]                                                                                                                   [10/14/26 18:48:25] INFO     Animation 10 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -53,9 +73,9 @@ Manim Community v0.21.0
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat2_Ueber                         
                              gabeVerteilungSpeicherung/                         
-                             2119445635_1459038015_3275                         
-                             78448.mp4'                                         
-Animation 6: FadeIn(VGroup of 2 submobjects), etc.:   0%|          | 0/3 [00:00<?, ?it/s]                                                                                         [10/14/26 18:38:13] INFO     Animation 6 : Partial      scene_file_writer.py:192
+                             2119445635_2373454650_3032                         
+                             311483.mp4'                                        
+Animation 11: FadeOut(VGroup of 2 submobjects), etc.:   0%|          | 0/3 [00:00<?, ?it/s]                                                                                           [10/14/26 18:48:27] INFO     Animation 11 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -65,9 +85,9 @@ Manim Community v0.21.0
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat2_Ueber                         
                              gabeVerteilungSpeicherung/                         
-                             2119445635_3056829328_5742                         
-                             98005.mp4'                                         
-Animation 7: FadeIn(VGroup of 7 submobjects), etc.:   0%|          | 0/18 [00:00<?, ?it/s]Animation 7: FadeIn(VGroup of 7 submobjects), etc.:  56%|█████▌    | 10/18 [00:00<00:00, 99.88it/s]                                                                                                   [10/14/26 18:38:16] INFO     Animation 7 : Partial      scene_file_writer.py:192
+                             2119445635_170976512_37242                         
+                             15876.mp4'                                         
+Animation 12: FadeIn(VGroup of 2 submobjects), etc.:   0%|          | 0/3 [00:00<?, ?it/s]                                                                                          [10/14/26 18:48:28] INFO     Animation 12 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -77,9 +97,9 @@ Manim Community v0.21.0
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat2_Ueber                         
                              gabeVerteilungSpeicherung/                         
-                             2119445635_3510832809_2844                         
-                             601934.mp4'                                        
-Animation 8: Circumscribe(Group), etc.:   0%|          | 0/24 [00:00<?, ?it/s]Animation 8: Circumscribe(Group), etc.:  17%|█▋        | 4/24 [00:00<00:00, 29.71it/s]Animation 8: Circumscribe(Group), etc.:  38%|███▊      | 9/24 [00:00<00:00, 29.03it/s]Animation 8: Circumscribe(Group), etc.:  58%|█████▊    | 14/24 [00:00<00:00, 35.94it/s]Animation 8: Circumscribe(Group), etc.:  75%|███████▌  | 18/24 [00:00<00:00, 29.43it/s]                                                                                       [10/14/26 18:38:17] INFO     Animation 8 : Partial      scene_file_writer.py:192
+                             2119445635_2907846804_2726                         
+                             477480.mp4'                                        
+Animation 13: FadeOut(Text('niedrige Vorlauftemperatur → bessere Erzeugereffizienz')), etc.:   0%|          | 0/5 [00:00<?, ?it/s]                                                                                                                                  [10/14/26 18:48:29] INFO     Animation 13 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -89,9 +109,9 @@ Manim Community v0.21.0
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat2_Ueber                         
                              gabeVerteilungSpeicherung/                         
-                             2119445635_2004417000_1775                         
-                             010962.mp4'                                        
-Animation 9: Create(VMobject), etc.:   0%|          | 0/18 [00:00<?, ?it/s]Animation 9: Create(VMobject), etc.:  33%|███▎      | 6/18 [00:00<00:00, 58.00it/s]Animation 9: Create(VMobject), etc.:  67%|██████▋   | 12/18 [00:00<00:00, 56.24it/s]Animation 9: Create(VMobject), etc.: 100%|██████████| 18/18 [00:00<00:00, 57.40it/s]                                                                                    [10/14/26 18:38:19] INFO     Animation 9 : Partial      scene_file_writer.py:192
+                             2119445635_445989531_91178                         
+                             9729.mp4'                                          
+Animation 14: FadeIn(VGroup of 6 submobjects), etc.:   0%|          | 0/15 [00:00<?, ?it/s]Animation 14: FadeIn(VGroup of 6 submobjects), etc.:  40%|████      | 6/15 [00:00<00:00, 56.91it/s]Animation 14: FadeIn(VGroup of 6 submobjects), etc.:  87%|████████▋ | 13/15 [00:00<00:00, 59.13it/s]                                                                                                    [10/14/26 18:48:30] INFO     Animation 14 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -101,11 +121,9 @@ Manim Community v0.21.0
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat2_Ueber                         
                              gabeVerteilungSpeicherung/                         
-                             2119445635_3158357198_7105                         
-                             00741.mp4'                                         
-[LAYOUT] Beat2_UebergabeVerteilungSpeicherung t=13.2s play: line through '°C' @(-1.23,1.19) × Circle@(-1.10,1.20)
-[LAYOUT] Beat2_UebergabeVerteilungSpeicherung t=13.2s play: line through '°C' @(-1.23,1.19) × Line@(-1.10,1.08)
-Animation 10: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:   0%|          | 0/109 [00:00<?, ?it/s]Animation 10: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:   7%|▋         | 8/109 [00:00<00:01, 70.74it/s]Animation 10: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  15%|█▍        | 16/109 [00:00<00:01, 68.27it/s]Animation 10: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  21%|██        | 23/109 [00:00<00:01, 68.59it/s]Animation 10: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  28%|██▊       | 30/109 [00:00<00:01, 56.51it/s]Animation 10: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  33%|███▎      | 36/109 [00:00<00:01, 56.77it/s]Animation 10: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  39%|███▉      | 43/109 [00:00<00:01, 58.48it/s]Animation 10: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  45%|████▍     | 49/109 [00:00<00:01, 58.67it/s]Animation 10: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  50%|█████     | 55/109 [00:00<00:00, 58.76it/s]Animation 10: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  56%|█████▌    | 61/109 [00:01<00:00, 58.12it/s]Animation 10: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  61%|██████▏   | 67/109 [00:01<00:00, 55.73it/s]Animation 10: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  68%|██████▊   | 74/109 [00:01<00:00, 57.98it/s]Animation 10: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  73%|███████▎  | 80/109 [00:01<00:00, 58.08it/s]Animation 10: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  79%|███████▉  | 86/109 [00:01<00:00, 57.50it/s]Animation 10: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  85%|████████▌ | 93/109 [00:01<00:00, 58.71it/s]Animation 10: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  92%|█████████▏| 100/109 [00:01<00:00, 59.25it/s]Animation 10: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  98%|█████████▊| 107/109 [00:01<00:00, 60.35it/s]                                                                                                                   [10/14/26 18:38:24] INFO     Animation 10 : Partial     scene_file_writer.py:192
+                             2119445635_2928450064_2127                         
+                             329686.mp4'                                        
+Animation 15: Circumscribe(Group), etc.:   0%|          | 0/30 [00:00<?, ?it/s]Animation 15: Circumscribe(Group), etc.:  17%|█▋        | 5/30 [00:00<00:00, 43.77it/s]Animation 15: Circumscribe(Group), etc.:  33%|███▎      | 10/30 [00:00<00:00, 38.46it/s]Animation 15: Circumscribe(Group), etc.:  47%|████▋     | 14/30 [00:00<00:00, 34.34it/s]Animation 15: Circumscribe(Group), etc.:  60%|██████    | 18/30 [00:00<00:00, 29.66it/s]Animation 15: Circumscribe(Group), etc.:  73%|███████▎  | 22/30 [00:00<00:00, 25.68it/s]Animation 15: Circumscribe(Group), etc.:  83%|████████▎ | 25/30 [00:00<00:00, 25.75it/s]                                                                                        [10/14/26 18:48:32] INFO     Animation 15 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -115,9 +133,9 @@ Manim Community v0.21.0
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat2_Ueber                         
                              gabeVerteilungSpeicherung/                         
-                             2119445635_2373454650_3957                         
-                             832537.mp4'                                        
-Animation 11: FadeOut(VGroup of 2 submobjects), etc.:   0%|          | 0/3 [00:00<?, ?it/s]                                                                                           [10/14/26 18:38:27] INFO     Animation 11 : Partial     scene_file_writer.py:192
+                             2119445635_484524872_32154                         
+                             014.mp4'                                           
+Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:   0%|          | 0/129 [00:00<?, ?it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:   5%|▌         | 7/129 [00:00<00:01, 63.40it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  11%|█         | 14/129 [00:00<00:01, 64.17it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  16%|█▋        | 21/129 [00:00<00:01, 64.24it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  22%|██▏       | 28/129 [00:00<00:01, 64.42it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  27%|██▋       | 35/129 [00:00<00:01, 64.33it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  33%|███▎      | 42/129 [00:00<00:01, 63.72it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  38%|███▊      | 49/129 [00:00<00:01, 62.30it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  43%|████▎     | 56/129 [00:00<00:01, 63.19it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  49%|████▉     | 63/129 [00:00<00:01, 63.46it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  54%|█████▍    | 70/129 [00:01<00:00, 62.37it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  60%|█████▉    | 77/129 [00:01<00:00, 61.68it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  65%|██████▌   | 84/129 [00:01<00:00, 61.46it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  71%|███████   | 91/129 [00:01<00:00, 60.26it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  76%|███████▌  | 98/129 [00:01<00:00, 59.72it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  81%|████████  | 104/129 [00:01<00:00, 59.69it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  86%|████████▌ | 111/129 [00:01<00:00, 59.98it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  91%|█████████▏| 118/129 [00:01<00:00, 61.16it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  97%|█████████▋| 125/129 [00:02<00:00, 61.42it/s]                                                                                                                   [10/14/26 18:48:35] INFO     Animation 16 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -127,9 +145,9 @@ Manim Community v0.21.0
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat2_Ueber                         
                              gabeVerteilungSpeicherung/                         
-                             2119445635_170976512_20134                         
-                             04075.mp4'                                         
-Animation 12: FadeIn(VGroup of 2 submobjects), etc.:   0%|          | 0/3 [00:00<?, ?it/s]                                                                                          [10/14/26 18:38:28] INFO     Animation 12 : Partial     scene_file_writer.py:192
+                             2119445635_357948244_35340                         
+                             61190.mp4'                                         
+Animation 17: FadeOut(VGroup of 2 submobjects), etc.:   0%|          | 0/3 [00:00<?, ?it/s]                                                                                           [10/14/26 18:48:37] INFO     Animation 17 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -139,9 +157,9 @@ Manim Community v0.21.0
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat2_Ueber                         
                              gabeVerteilungSpeicherung/                         
-                             2119445635_2907846804_2440                         
-                             245624.mp4'                                        
-Animation 13: FadeOut(Text('niedrige Vorlauftemperatur → bessere Erzeugereffizienz')), etc.:   0%|          | 0/5 [00:00<?, ?it/s]Animation 13: FadeOut(Text('niedrige Vorlauftemperatur → bessere Erzeugereffizienz')), etc.: 100%|██████████| 5/5 [00:00<00:00, 48.40it/s]                                                                                                                                          [10/14/26 18:38:31] INFO     Animation 13 : Partial     scene_file_writer.py:192
+                             2119445635_1560938961_1581                         
+                             854289.mp4'                                        
+Animation 18: FadeIn(VGroup of 2 submobjects), etc.:   0%|          | 0/3 [00:00<?, ?it/s]                                                                                          [10/14/26 18:48:38] INFO     Animation 18 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -151,9 +169,9 @@ Manim Community v0.21.0
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat2_Ueber                         
                              gabeVerteilungSpeicherung/                         
-                             2119445635_273124118_37233                         
-                             83578.mp4'                                         
-Animation 14: FadeIn(VGroup of 6 submobjects), etc.:   0%|          | 0/15 [00:00<?, ?it/s]Animation 14: FadeIn(VGroup of 6 submobjects), etc.:  33%|███▎      | 5/15 [00:00<00:00, 41.99it/s]Animation 14: FadeIn(VGroup of 6 submobjects), etc.:  67%|██████▋   | 10/15 [00:00<00:00, 40.88it/s]Animation 14: FadeIn(VGroup of 6 submobjects), etc.: 100%|██████████| 15/15 [00:00<00:00, 38.33it/s]                                                                                                    [10/14/26 18:38:32] INFO     Animation 14 : Partial     scene_file_writer.py:192
+                             2119445635_1892079820_1234                         
+                             982193.mp4'                                        
+Animation 19: FadeOut(Text('Verluste innerhalb der Hülle werden als Gewinn gutgeschrieben')), etc.:   0%|          | 0/5 [00:00<?, ?it/s]Animation 19: FadeOut(Text('Verluste innerhalb der Hülle werden als Gewinn gutgeschrieben')), etc.: 100%|██████████| 5/5 [00:00<00:00, 47.29it/s]                                                                                                                                                 [10/14/26 18:48:39] INFO     Animation 19 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -163,9 +181,9 @@ Manim Community v0.21.0
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat2_Ueber                         
                              gabeVerteilungSpeicherung/                         
-                             2119445635_2928450064_1836                         
-                             38407.mp4'                                         
-Animation 15: Circumscribe(Group), etc.:   0%|          | 0/30 [00:00<?, ?it/s]Animation 15: Circumscribe(Group), etc.:  10%|█         | 3/30 [00:00<00:01, 26.36it/s]Animation 15: Circumscribe(Group), etc.:  27%|██▋       | 8/30 [00:00<00:00, 34.83it/s]Animation 15: Circumscribe(Group), etc.:  40%|████      | 12/30 [00:00<00:00, 22.41it/s]Animation 15: Circumscribe(Group), etc.:  50%|█████     | 15/30 [00:00<00:00, 22.09it/s]Animation 15: Circumscribe(Group), etc.:  60%|██████    | 18/30 [00:00<00:00, 15.01it/s]Animation 15: Circumscribe(Group), etc.:  67%|██████▋   | 20/30 [00:01<00:00, 13.43it/s]Animation 15: Circumscribe(Group), etc.:  73%|███████▎  | 22/30 [00:01<00:00, 14.02it/s]Animation 15: Circumscribe(Group), etc.:  80%|████████  | 24/30 [00:01<00:00, 13.26it/s]Animation 15: Circumscribe(Group), etc.:  93%|█████████▎| 28/30 [00:01<00:00, 18.41it/s]                                                                                        [10/14/26 18:38:35] INFO     Animation 15 : Partial     scene_file_writer.py:192
+                             2119445635_633765771_25268                         
+                             65659.mp4'                                         
+Animation 20: FadeIn(VGroup of 6 submobjects), etc.:   0%|          | 0/15 [00:00<?, ?it/s]Animation 20: FadeIn(VGroup of 6 submobjects), etc.:  47%|████▋     | 7/15 [00:00<00:00, 66.13it/s]Animation 20: FadeIn(VGroup of 6 submobjects), etc.:  93%|█████████▎| 14/15 [00:00<00:00, 65.79it/s]                                                                                                    [10/14/26 18:48:40] INFO     Animation 20 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -175,9 +193,9 @@ Manim Community v0.21.0
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat2_Ueber                         
                              gabeVerteilungSpeicherung/                         
-                             2119445635_484524872_22020                         
-                             37983.mp4'                                         
-Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:   0%|          | 0/129 [00:00<?, ?it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:   3%|▎         | 4/129 [00:00<00:03, 34.42it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:   6%|▌         | 8/129 [00:00<00:03, 35.92it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:   9%|▉         | 12/129 [00:00<00:03, 37.10it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  13%|█▎        | 17/129 [00:00<00:03, 37.14it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  16%|█▋        | 21/129 [00:00<00:02, 36.55it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  19%|█▉        | 25/129 [00:00<00:02, 34.98it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  22%|██▏       | 29/129 [00:00<00:02, 34.43it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  26%|██▌       | 33/129 [00:00<00:02, 35.11it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  29%|██▊       | 37/129 [00:01<00:02, 34.14it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  32%|███▏      | 41/129 [00:01<00:02, 34.88it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  35%|███▍      | 45/129 [00:01<00:02, 34.55it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  38%|███▊      | 49/129 [00:01<00:02, 34.23it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  41%|████      | 53/129 [00:01<00:02, 33.63it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  44%|████▍     | 57/129 [00:01<00:02, 32.24it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  47%|████▋     | 61/129 [00:01<00:02, 31.37it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  50%|█████     | 65/129 [00:01<00:02, 31.92it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  53%|█████▎    | 69/129 [00:02<00:01, 32.75it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  57%|█████▋    | 73/129 [00:02<00:01, 33.14it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  60%|█████▉    | 77/129 [00:02<00:01, 33.80it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  63%|██████▎   | 81/129 [00:02<00:01, 34.43it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  66%|██████▌   | 85/129 [00:02<00:01, 33.09it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  69%|██████▉   | 89/129 [00:02<00:01, 31.65it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  72%|███████▏  | 93/129 [00:02<00:01, 29.24it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  75%|███████▌  | 97/129 [00:02<00:01, 30.20it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  78%|███████▊  | 101/129 [00:03<00:00, 32.35it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  81%|████████▏ | 105/129 [00:03<00:00, 33.66it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  84%|████████▍ | 109/129 [00:03<00:00, 33.29it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  88%|████████▊ | 113/129 [00:03<00:00, 33.61it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  91%|█████████ | 117/129 [00:03<00:00, 33.72it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  94%|█████████▍| 121/129 [00:03<00:00, 33.95it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.:  97%|█████████▋| 125/129 [00:03<00:00, 34.95it/s]Animation 16: UpdateFromAlphaFunc(VGroup of 4 submobjects), etc.: 100%|██████████| 129/129 [00:03<00:00, 34.85it/s]                                                                                                                   [10/14/26 18:38:41] INFO     Animation 16 : Partial     scene_file_writer.py:192
+                             2119445635_548488078_36023                         
+                             29372.mp4'                                         
+Animation 21: Circumscribe(Group), etc.:   0%|          | 0/27 [00:00<?, ?it/s]Animation 21: Circumscribe(Group), etc.:  19%|█▊        | 5/27 [00:00<00:00, 43.38it/s]Animation 21: Circumscribe(Group), etc.:  37%|███▋      | 10/27 [00:00<00:00, 35.79it/s]Animation 21: Circumscribe(Group), etc.:  52%|█████▏    | 14/27 [00:00<00:00, 26.13it/s]Animation 21: Circumscribe(Group), etc.:  63%|██████▎   | 17/27 [00:00<00:00, 25.56it/s]Animation 21: Circumscribe(Group), etc.:  78%|███████▊  | 21/27 [00:00<00:00, 26.49it/s]Animation 21: Circumscribe(Group), etc.: 100%|██████████| 27/27 [00:00<00:00, 34.91it/s]                                                                                        [10/14/26 18:48:42] INFO     Animation 21 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -187,9 +205,9 @@ Manim Community v0.21.0
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat2_Ueber                         
                              gabeVerteilungSpeicherung/                         
-                             2119445635_357948244_49021                         
-                             0421.mp4'                                          
-Animation 17: FadeOut(VGroup of 2 submobjects), etc.:   0%|          | 0/3 [00:00<?, ?it/s]                                                                                           [10/14/26 18:38:45] INFO     Animation 17 : Partial     scene_file_writer.py:192
+                             2119445635_3221225032_1537                         
+                             940735.mp4'                                        
+Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:   0%|          | 0/103 [00:00<?, ?it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:   7%|▋         | 7/103 [00:00<00:01, 63.45it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  14%|█▎        | 14/103 [00:00<00:01, 63.18it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  20%|██        | 21/103 [00:00<00:01, 63.46it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  27%|██▋       | 28/103 [00:00<00:01, 63.30it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  34%|███▍      | 35/103 [00:00<00:01, 63.17it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  41%|████      | 42/103 [00:00<00:00, 63.10it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  48%|████▊     | 49/103 [00:00<00:00, 62.81it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  54%|█████▍    | 56/103 [00:00<00:00, 62.99it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  61%|██████    | 63/103 [00:01<00:00, 62.64it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  68%|██████▊   | 70/103 [00:01<00:00, 62.34it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  75%|███████▍  | 77/103 [00:01<00:00, 62.37it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  82%|████████▏ | 84/103 [00:01<00:00, 62.14it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  88%|████████▊ | 91/103 [00:01<00:00, 61.54it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  95%|█████████▌| 98/103 [00:01<00:00, 60.87it/s]                                                                                                                  [10/14/26 18:48:45] INFO     Animation 22 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -199,9 +217,9 @@ Manim Community v0.21.0
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat2_Ueber                         
                              gabeVerteilungSpeicherung/                         
-                             2119445635_1560938961_9090                         
-                             03247.mp4'                                         
-Animation 18: FadeIn(VGroup of 2 submobjects), etc.:   0%|          | 0/3 [00:00<?, ?it/s]                                                                                          [10/14/26 18:38:46] INFO     Animation 18 : Partial     scene_file_writer.py:192
+                             2119445635_1673545075_8742                         
+                             75359.mp4'                                         
+Animation 23: FadeOut(VGroup of 2 submobjects), etc.:   0%|          | 0/3 [00:00<?, ?it/s]                                                                                           [10/14/26 18:48:47] INFO     Animation 23 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -211,9 +229,9 @@ Manim Community v0.21.0
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat2_Ueber                         
                              gabeVerteilungSpeicherung/                         
-                             2119445635_1892079820_5658                         
-                             28619.mp4'                                         
-Animation 19: FadeOut(Text('Verluste innerhalb der Hülle werden als Gewinn gutgeschrieben')), etc.:   0%|          | 0/5 [00:00<?, ?it/s]Animation 19: FadeOut(Text('Verluste innerhalb der Hülle werden als Gewinn gutgeschrieben')), etc.: 100%|██████████| 5/5 [00:00<00:00, 40.55it/s]                                                                                                                                                 [10/14/26 18:38:48] INFO     Animation 19 : Partial     scene_file_writer.py:192
+                             2119445635_3424782250_1360                         
+                             766364.mp4'                                        
+Animation 24: FadeIn(VGroup of 2 submobjects), etc.:   0%|          | 0/3 [00:00<?, ?it/s]                                                                                          [10/14/26 18:48:48] INFO     Animation 24 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -223,9 +241,9 @@ Manim Community v0.21.0
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat2_Ueber                         
                              gabeVerteilungSpeicherung/                         
-                             2119445635_633765771_41505                         
-                             379.mp4'                                           
-Animation 20: FadeIn(VGroup of 6 submobjects), etc.:   0%|          | 0/15 [00:00<?, ?it/s]Animation 20: FadeIn(VGroup of 6 submobjects), etc.:  27%|██▋       | 4/15 [00:00<00:00, 28.95it/s]Animation 20: FadeIn(VGroup of 6 submobjects), etc.:  53%|█████▎    | 8/15 [00:00<00:00, 34.43it/s]Animation 20: FadeIn(VGroup of 6 submobjects), etc.:  87%|████████▋ | 13/15 [00:00<00:00, 38.81it/s]                                                                                                    [10/14/26 18:38:50] INFO     Animation 20 : Partial     scene_file_writer.py:192
+                             2119445635_2843308920_1731                         
+                             311117.mp4'                                        
+Animation 25: FadeOut(Text('7 Tage ohne Zapfung')), etc.:   0%|          | 0/5 [00:00<?, ?it/s]                                                                                               [10/14/26 18:48:49] INFO     Animation 25 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -235,9 +253,9 @@ Manim Community v0.21.0
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat2_Ueber                         
                              gabeVerteilungSpeicherung/                         
-                             2119445635_548488078_26289                         
-                             74272.mp4'                                         
-Animation 21: Circumscribe(Group), etc.:   0%|          | 0/27 [00:00<?, ?it/s]Animation 21: Circumscribe(Group), etc.:  15%|█▍        | 4/27 [00:00<00:00, 26.64it/s]Animation 21: Circumscribe(Group), etc.:  26%|██▌       | 7/27 [00:00<00:00, 25.06it/s]Animation 21: Circumscribe(Group), etc.:  37%|███▋      | 10/27 [00:00<00:00, 25.05it/s]Animation 21: Circumscribe(Group), etc.:  48%|████▊     | 13/27 [00:00<00:00, 17.24it/s]Animation 21: Circumscribe(Group), etc.:  56%|█████▌    | 15/27 [00:00<00:00, 15.36it/s]Animation 21: Circumscribe(Group), etc.:  63%|██████▎   | 17/27 [00:00<00:00, 16.38it/s]Animation 21: Circumscribe(Group), etc.:  70%|███████   | 19/27 [00:01<00:00, 16.80it/s]Animation 21: Circumscribe(Group), etc.:  78%|███████▊  | 21/27 [00:01<00:00, 17.30it/s]Animation 21: Circumscribe(Group), etc.:  96%|█████████▋| 26/27 [00:01<00:00, 24.74it/s]                                                                                        [10/14/26 18:38:53] INFO     Animation 21 : Partial     scene_file_writer.py:192
+                             2119445635_3339254928_3400                         
+                             71807.mp4'                                         
+Animation 26: Create(SurroundingRectangle), etc.:   0%|          | 0/21 [00:00<?, ?it/s]Animation 26: Create(SurroundingRectangle), etc.:  24%|██▍       | 5/21 [00:00<00:00, 47.40it/s]Animation 26: Create(SurroundingRectangle), etc.:  48%|████▊     | 10/21 [00:00<00:00, 46.72it/s]Animation 26: Create(SurroundingRectangle), etc.:  71%|███████▏  | 15/21 [00:00<00:00, 46.67it/s]Animation 26: Create(SurroundingRectangle), etc.:  95%|█████████▌| 20/21 [00:00<00:00, 47.08it/s]                                                                                                 [10/14/26 18:48:51] INFO     Animation 26 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -247,9 +265,9 @@ Manim Community v0.21.0
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat2_Ueber                         
                              gabeVerteilungSpeicherung/                         
-                             2119445635_3221225032_3206                         
-                             987853.mp4'                                        
-Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:   0%|          | 0/103 [00:00<?, ?it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:   5%|▍         | 5/103 [00:00<00:02, 41.09it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  10%|▉         | 10/103 [00:00<00:02, 40.31it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  15%|█▍        | 15/103 [00:00<00:02, 40.19it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  19%|█▉        | 20/103 [00:00<00:02, 39.24it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  24%|██▍       | 25/103 [00:00<00:01, 39.96it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  29%|██▉       | 30/103 [00:00<00:01, 39.59it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  33%|███▎      | 34/103 [00:00<00:01, 37.98it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  38%|███▊      | 39/103 [00:00<00:01, 38.96it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  42%|████▏     | 43/103 [00:01<00:01, 37.69it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  46%|████▌     | 47/103 [00:01<00:01, 37.75it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  50%|████▉     | 51/103 [00:01<00:01, 38.34it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  54%|█████▍    | 56/103 [00:01<00:01, 39.09it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  59%|█████▉    | 61/103 [00:01<00:01, 39.52it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  64%|██████▍   | 66/103 [00:01<00:00, 40.19it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  69%|██████▉   | 71/103 [00:01<00:00, 40.93it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  74%|███████▍  | 76/103 [00:01<00:00, 39.69it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  78%|███████▊  | 80/103 [00:02<00:00, 39.53it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  83%|████████▎ | 85/103 [00:02<00:00, 40.43it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  87%|████████▋ | 90/103 [00:02<00:00, 40.92it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  92%|█████████▏| 95/103 [00:02<00:00, 39.82it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  96%|█████████▌| 99/103 [00:02<00:00, 39.35it/s]Animation 22: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.: 100%|██████████| 103/103 [00:02<00:00, 39.04it/s]                                                                                                                   [10/14/26 18:38:58] INFO     Animation 22 : Partial     scene_file_writer.py:192
+                             2119445635_534957239_37264                         
+                             02272.mp4'                                         
+Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:   0%|          | 0/96 [00:00<?, ?it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:   6%|▋         | 6/96 [00:00<00:01, 54.15it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  12%|█▎        | 12/96 [00:00<00:01, 55.69it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  19%|█▉        | 18/96 [00:00<00:01, 56.09it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  25%|██▌       | 24/96 [00:00<00:01, 56.80it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  31%|███▏      | 30/96 [00:00<00:01, 57.01it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  38%|███▊      | 36/96 [00:00<00:01, 56.92it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  44%|████▍     | 42/96 [00:00<00:01, 39.95it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  49%|████▉     | 47/96 [00:00<00:01, 41.40it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  55%|█████▌    | 53/96 [00:01<00:00, 43.80it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  61%|██████▏   | 59/96 [00:01<00:00, 46.34it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  68%|██████▊   | 65/96 [00:01<00:00, 47.57it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  73%|███████▎  | 70/96 [00:01<00:00, 46.16it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  79%|███████▉  | 76/96 [00:01<00:00, 47.27it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  85%|████████▌ | 82/96 [00:01<00:00, 48.45it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  92%|█████████▏| 88/96 [00:01<00:00, 49.93it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  98%|█████████▊| 94/96 [00:01<00:00, 51.05it/s]                                                                                                                 [10/14/26 18:48:55] INFO     Animation 27 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -259,9 +277,9 @@ Manim Community v0.21.0
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat2_Ueber                         
                              gabeVerteilungSpeicherung/                         
-                             2119445635_1673545075_1765                         
-                             944109.mp4'                                        
-Animation 23: FadeOut(VGroup of 2 submobjects), etc.:   0%|          | 0/3 [00:00<?, ?it/s]                                                                                           [10/14/26 18:39:01] INFO     Animation 23 : Partial     scene_file_writer.py:192
+                             2119445635_1482127980_1102                         
+                             428333.mp4'                                        
+Animation 28: FadeOut(VGroup of 2 submobjects):   0%|          | 0/9 [00:00<?, ?it/s]Animation 28: FadeOut(VGroup of 2 submobjects):  67%|██████▋   | 6/9 [00:00<00:00, 59.28it/s]                                                                                             [10/14/26 18:48:56] INFO     Animation 28 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -271,9 +289,9 @@ Manim Community v0.21.0
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat2_Ueber                         
                              gabeVerteilungSpeicherung/                         
-                             2119445635_3424782250_2838                         
-                             035693.mp4'                                        
-Animation 24: FadeIn(VGroup of 2 submobjects), etc.:   0%|          | 0/3 [00:00<?, ?it/s]                                                                                          [10/14/26 18:39:02] INFO     Animation 24 : Partial     scene_file_writer.py:192
+                             2119445635_52957754_253296                         
+                             4743.mp4'                                          
+[10/14/26 18:48:57] INFO     Animation 29 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -283,68 +301,8 @@ Manim Community v0.21.0
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat2_Ueber                         
                              gabeVerteilungSpeicherung/                         
-                             2119445635_2843308920_1025                         
-                             52632.mp4'                                         
-Animation 25: FadeOut(Text('7 Tage ohne Zapfung')), etc.:   0%|          | 0/5 [00:00<?, ?it/s]Animation 25: FadeOut(Text('7 Tage ohne Zapfung')), etc.: 100%|██████████| 5/5 [00:00<00:00, 44.26it/s]                                                                                                       [10/14/26 18:39:04] INFO     Animation 25 : Partial     scene_file_writer.py:192
-                             movie file written in                              
-                             '/Users/niloufarghandehari                         
-                             yoon/Developer/semio/.repo                         
-                             /🎫/26/10/13/RESTYLE-ENERG                         
-                             YBALANCE-WITH-FUNDAMENTALS                         
-                             -GLYPHS/checks/ch4_media/v                         
-                             ideos/scene_4/480p15/parti                         
-                             al_movie_files/Beat2_Ueber                         
-                             gabeVerteilungSpeicherung/                         
-                             2119445635_3339254928_2354                         
-                             923382.mp4'                                        
-Animation 26: Create(SurroundingRectangle), etc.:   0%|          | 0/21 [00:00<?, ?it/s]Animation 26: Create(SurroundingRectangle), etc.:  19%|█▉        | 4/21 [00:00<00:00, 35.67it/s]Animation 26: Create(SurroundingRectangle), etc.:  38%|███▊      | 8/21 [00:00<00:00, 34.67it/s]Animation 26: Create(SurroundingRectangle), etc.:  57%|█████▋    | 12/21 [00:00<00:00, 33.06it/s]Animation 26: Create(SurroundingRectangle), etc.:  76%|███████▌  | 16/21 [00:00<00:00, 33.37it/s]Animation 26: Create(SurroundingRectangle), etc.:  95%|█████████▌| 20/21 [00:00<00:00, 32.72it/s]                                                                                                 [10/14/26 18:39:06] INFO     Animation 26 : Partial     scene_file_writer.py:192
-                             movie file written in                              
-                             '/Users/niloufarghandehari                         
-                             yoon/Developer/semio/.repo                         
-                             /🎫/26/10/13/RESTYLE-ENERG                         
-                             YBALANCE-WITH-FUNDAMENTALS                         
-                             -GLYPHS/checks/ch4_media/v                         
-                             ideos/scene_4/480p15/parti                         
-                             al_movie_files/Beat2_Ueber                         
-                             gabeVerteilungSpeicherung/                         
-                             2119445635_534957239_19220                         
-                             1784.mp4'                                          
-Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:   0%|          | 0/96 [00:00<?, ?it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:   5%|▌         | 5/96 [00:00<00:02, 41.93it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  10%|█         | 10/96 [00:00<00:02, 42.49it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  16%|█▌        | 15/96 [00:00<00:01, 42.47it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  21%|██        | 20/96 [00:00<00:01, 41.86it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  26%|██▌       | 25/96 [00:00<00:01, 41.39it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  31%|███▏      | 30/96 [00:00<00:01, 39.07it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  35%|███▌      | 34/96 [00:00<00:01, 38.20it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  40%|███▉      | 38/96 [00:00<00:01, 36.93it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  45%|████▍     | 43/96 [00:01<00:01, 38.88it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  50%|█████     | 48/96 [00:01<00:01, 39.54it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  54%|█████▍    | 52/96 [00:01<00:01, 39.58it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  58%|█████▊    | 56/96 [00:01<00:01, 39.39it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  62%|██████▎   | 60/96 [00:01<00:01, 33.18it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  67%|██████▋   | 64/96 [00:01<00:00, 33.38it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  72%|███████▏  | 69/96 [00:01<00:00, 36.01it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  77%|███████▋  | 74/96 [00:01<00:00, 37.42it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  81%|████████▏ | 78/96 [00:02<00:00, 37.68it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  85%|████████▌ | 82/96 [00:02<00:00, 37.08it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  90%|████████▉ | 86/96 [00:02<00:00, 37.80it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  94%|█████████▍| 90/96 [00:02<00:00, 37.73it/s]Animation 27: UpdateFromAlphaFunc(VGroup of 8 submobjects), etc.:  98%|█████████▊| 94/96 [00:02<00:00, 38.08it/s]                                                                                                                 [10/14/26 18:39:11] INFO     Animation 27 : Partial     scene_file_writer.py:192
-                             movie file written in                              
-                             '/Users/niloufarghandehari                         
-                             yoon/Developer/semio/.repo                         
-                             /🎫/26/10/13/RESTYLE-ENERG                         
-                             YBALANCE-WITH-FUNDAMENTALS                         
-                             -GLYPHS/checks/ch4_media/v                         
-                             ideos/scene_4/480p15/parti                         
-                             al_movie_files/Beat2_Ueber                         
-                             gabeVerteilungSpeicherung/                         
-                             2119445635_1482127980_1255                         
-                             570553.mp4'                                        
-Animation 28: FadeOut(VGroup of 2 submobjects):   0%|          | 0/9 [00:00<?, ?it/s]Animation 28: FadeOut(VGroup of 2 submobjects):  56%|█████▌    | 5/9 [00:00<00:00, 49.34it/s]                                                                                             [10/14/26 18:39:13] INFO     Animation 28 : Partial     scene_file_writer.py:192
-                             movie file written in                              
-                             '/Users/niloufarghandehari                         
-                             yoon/Developer/semio/.repo                         
-                             /🎫/26/10/13/RESTYLE-ENERG                         
-                             YBALANCE-WITH-FUNDAMENTALS                         
-                             -GLYPHS/checks/ch4_media/v                         
-                             ideos/scene_4/480p15/parti                         
-                             al_movie_files/Beat2_Ueber                         
-                             gabeVerteilungSpeicherung/                         
-                             2119445635_52957754_344514                         
-                             1769.mp4'                                          
-[10/14/26 18:39:14] INFO     Animation 29 : Partial     scene_file_writer.py:192
-                             movie file written in                              
-                             '/Users/niloufarghandehari                         
-                             yoon/Developer/semio/.repo                         
-                             /🎫/26/10/13/RESTYLE-ENERG                         
-                             YBALANCE-WITH-FUNDAMENTALS                         
-                             -GLYPHS/checks/ch4_media/v                         
-                             ideos/scene_4/480p15/parti                         
-                             al_movie_files/Beat2_Ueber                         
-                             gabeVerteilungSpeicherung/                         
-                             2119445635_241228271_11169                         
-                             69973.mp4'                                         
+                             2119445635_241228271_67618                         
+                             1924.mp4'                                          
                     INFO     Combining to Movie file.   scene_file_writer.py:952
                     INFO                               scene_file_writer.py:1103
                              File ready at                                      
@@ -357,6 +315,14 @@ Manim Community v0.21.0
                              /Beat2_UebergabeVerteilun                          
                              gSpeicherung.mp4'                                  
                                                                                 
+                    INFO     The partial movie         scene_file_writer.py:1073
+                             directory is full (> 100                           
+                             files). Therefore, manim                           
+                             has removed the 5 oldest                           
+                             file(s). You can change                            
+                             this behaviour by                                  
+                             changing max_files_cached                          
+                             in config.                                         
                     INFO     Rendered                               scene.py:290
                              Beat2_UebergabeVerteilungSpeicherung               
                              Played 30 animations                               

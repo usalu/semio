@@ -96,3 +96,40 @@ Dev report (screenshot at 14:33 of the full video): the `1 W = 1 J / 1 s` box sa
 - Full video re-rendered at 1080p60 (`full_physical_fundamentals_video.py -q h`, isolated media dir `checks/hq_media`, log `checks/full_render_qh_v2.log`; 1920×1080 @ 60 fps, 14:58, silent; end section checked in `checks/hq_final_*.png`); all other Physical Fundamentals video files deleted on the dev's request — only `rendered/Full_Physical_Fundamentals_1080p60.mp4` kept.
 
 Status: closed 2026-10-09 (manually — repo MCP unavailable).
+
+## Round 2 — slide-deck annotations (2026-10-17)
+
+Repo MCP still `CONNECTION_CLOSED`; no ticket calls possible. Scope: `1_physical_fundamentals/scene_1.py` only (+ checks).
+
+- B1 `heat` → `convert1` → `convert2`: Q = … = 3 520 kJ, then 1 kWh = 1 kW·3 600 s = 1 kJ/s·3 600 s = 3 600 kJ, then Q = 3 520 kJ/3 600 kJ·kWh ≈ 0,98 kWh ≈ 1 kWh (kJ → kWh shown, no longer jumps to kWh).
+- B1 `envelope` clause + red „Wände, Dach — Transmission“ label and 4 red→blue outward streams (both roof slopes, right wall upper/lower storey), same warm→cold particle style as Heating Modul 2 Beat5.
+- B2 summer note: „Sommer: keine Heizung notwendig bzw. Gewinne decken die Verluste“; „meist“ removed there and in the subtitle/VO text.
+- B3 balance bars: static fade-in instead of growing; bars/labels moved inside the viewer crop.
+- B4: units kWh on W_el/Q_U/Q_H; DIN EN 14511 sentence removed from the COP subtitle.
+- Viewer crops ~0.6 units off each side: content kept within |x| ≤ 6.3–6.4 in touched beats. `checks/extent_audit.py` + `checks/render_audit.sh` report visible mobjects beyond the limit ([DEBUG] prefix, `X_LIMIT` env).
+- Not done: the „verschieben“ and „Strom ist zu viel“ comments (Beat4) are not visible on the supplied screenshots.
+- VO still has to be re-synthesised (`vo_timing.json` empty; new clauses convert1/convert2/envelope).
+
+## Round 3 — „Endenergie definieren“ (Beat4)
+
+New clause `final` before `compare1`: „Endenergie ist, was ans Haus geliefert und bezahlt wird: Brennstoff im Tank, Strom am Zähler.“ Drawn as house section + dashed Gebäudegrenze, orange Brennstoff / cyan Strom arrows ending at it, yellow brace „Endenergie“, radiator ripples + „Nutzwärme“ inside. Frame review: clean; ripples now keep running during the hold and the diagram fades before the next caption. Beat re-rendered without layout warnings (ripple/caption-order fix not re-reviewed by frame). VO for the new clause must be synthesised.
+
+## Round 4 — Abgas, Strahlung, Thermische Masse annotations
+
+- B4: `compare2` now „im Haus genau 1“; new clause `power` + orange arrow „Abgas im Kraftwerk“ over the Elektroheizstab bar (electricity also causes flue gas elsewhere).
+- B5: window 1,25 × 1,2 m → A = 1,5 m²; Q̇_S = 0,5·1,5 m²·500 W/m² = 375 W (no longer equals I); numbers cut from the `gain` subtitle; winter heating 1 000 → 625 W; „fernen“ removed; sun-facing wall pieces turn orange like the floor on absorption; room warms to 35 °C; lower window half Low-E, upper half „Vollglas“ (interpretation of the circled „Vollglas“ comment); new clauses `inner` + `compare`: inside Raffstore (slats warm up and radiate long-wave, room → 30 °C) vs outside (22 °C) as two bars, „besser“ on outside; I label moved under the sun (was cut off).
+- B6: slab dims in cm (100/100/10 cm), right-hand text now one step at a time (V → m → ΔT/Q/result, earlier lines hidden), Q line split so nothing is cut off.
+- Frame review by subagent: OK; layout guard clean at last render. IR beam geometry in the trap step is faint at 480p.
+
+## Round 5 — Strahlung waves, Thermische Masse, Sensible/latente Wärme
+
+- B5: all rays wavy (`_wave`, `WAVES`): short-wave dense ripple, long-wave stretched; pulses follow the waves (`_beam_pulses(kind=…)`).
+- B6: 16 K / 4 K amplitude arrows moved next to the peak dashed lines; ceiling subtitle „frei von Verkleidung, … und kalte Luft fällt“ + blue cold downdraft at the window + tag; winter floor patch red/transparent, floor warms, label „Boden erwärmt sich auch“.
+- B7: dashed 20 °C line with 100 %/50 % stays through dew point and condensation; dew-point cooling line; condensation redone as cold surface at the box edge → dots become droplets (labelled „Tropfen“) → grow → run down → trough with live „Kondensat x g“ (new clause `drops`, subtitle „kondensiert“); chart origins shifted off the left crop; person tag no longer clipped.
+- Frame review: OK except pacing/near-collisions that were fixed afterwards (slower droplet run, „Tropfen“ moved, floor tint stronger); the fixes themselves were checked by layout guard only.
+
+## Round 6 — Sensible/latente Wärme end, Venturi, Kraft
+
+- B7 end: split `relevance` into `rel_winter` + `rel_summer`, slower build-up; air-state labels now with φ (26 °C → 56 %, 14 °C → 95 %, computed from x and p_sat); register drawn without the serpentine tube (reading of „Schlange raus“); headings moved to y = 2.3.
+- B8: Venturi removed (duct, Bernoulli, wind over the ridge, A_Zu/A_Ab/V̇ formula = „zu viel / Venturi weglassen“). Now `Beat8_Lueftung`: openings + V̇ → Q̇_V = ρ·c·V̇·ΔT (0,34 only appears as „ρ·c ≈ 0,34 Wh/(m³K)“ in its own step) → 680 W → night ventilation. Massivdecke slab/label replaced by a coloured roof board „Dach“ (reading of the „auch weglassen“ comment + user’s hint).
+- B9 Kraft removed (user: „Der Exkurs zur Kraft erscheint mir zu viel“). Kept: 1 kWh = 3,6 MJ already in B2. BEATS now has 8 entries; KONZEPTE_UND_FORMELN.md updated. Code is in git history (commit e6fc21fbba9 and earlier).

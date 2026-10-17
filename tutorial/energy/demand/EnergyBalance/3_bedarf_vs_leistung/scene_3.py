@@ -621,10 +621,9 @@ class Beat2_Normheizlast(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(N, "einheit"))
         area = _partial_area(mini, ys, 1.0)
-        kw_tag = math_label(r"\text{Anlagengröße}", mini["pt"](1.0, 1.0) + UP * 0.2, size=LABEL_FONT_SIZE, color=POWER,
-                            edge="right")
-        kwh_tag = math_label(r"Q_h\;[\mathrm{kWh/a}]\quad\text{Betriebskosten}", mini["pt"](0.5, 0.0) + DOWN * 0.3,
-                             size=LABEL_FONT_SIZE, color=ENERGY)
+        kw_tag = math_label(r"\text{Anlagengröße}", mini["pt"](0.5, 0.86), size=LABEL_FONT_SIZE, color=POWER)
+        kwh_tag = math_label(r"Q_h\;[\mathrm{kWh/a}]", mini["pt"](0.0, 0.0) + DOWN * 0.3,
+                             size=LABEL_FONT_SIZE, color=ENERGY, edge="left")
         ring = highlight_param(panel[2], "phi", color=POWER)
         self.play(FadeOut(note), FadeIn(area), Create(ring), FadeIn(kw_tag), FadeIn(kwh_tag),
                   *split(1.4), run_time=1.4)
@@ -705,9 +704,9 @@ class Beat3_Jahresdauerlinie(Scene):
         curve.clear_updaters()
         area = _partial_area(chart, ys_year, 1.0, opacity=0.14)
         peak_i = int(np.argmax(ys_year))
-        tag_load = math_label(r"\text{Last}\;=\;\text{Höhe}", chart["pt"](peak_i / (PLOT_N - 1), 1.0) + LEFT * 1.0 + UP * 0.2,
+        tag_load = math_label(r"\text{Last}", chart["pt"](peak_i / (PLOT_N - 1), 1.0) + LEFT * 0.45 + UP * 0.2,
                               size=LABEL_FONT_SIZE, color=POWER)
-        tag_demand = math_label(r"\text{Bedarf}\;=\;\text{Fläche}", chart["pt"](0.02, 0.05), size=LABEL_FONT_SIZE, color=ENERGY,
+        tag_demand = math_label(r"\text{Bedarf}", chart["pt"](0.02, 0.05), size=LABEL_FONT_SIZE, color=ENERGY,
                                 edge="left")
         self.play(FadeIn(area), FadeIn(tag_load), FadeIn(tag_demand), *_life(house, p_frac, 1.0), run_time=1.0)
         hold_for(self, N, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.2 + 1.0 + 3.0 + 1.0,
@@ -877,7 +876,8 @@ class Beat4_RichtigAuslegen(Scene):
                       fill_color=P_RED, fill_opacity=0.22, stroke_width=0)
         self.add(cap_line)
         self.play(_ramp(x, 0.0), FadeIn(cap_read), FadeIn(gap), *_life(house, level, 1.0), run_time=1.0)
-        self.play(_ramp(x, 0.55, rate_func=linear), *_life(house, level, 4.0, r_max=0.5), run_time=4.0)
+        self.play(_ramp(x, 0.5, rate_func=linear), *_life(house, level, 2.6, r_max=0.5), run_time=2.6)
+        self.play(_ramp(x, 0.08), *_life(house, level, 1.6, r_max=0.5), run_time=1.6)
         hold_for(self, N, "zuklein", during=lambda rt: _life(house, level, rt, r_max=0.5))
 
         caption = swap_caption(self, caption, subtitle_text(N, "zugross"))
@@ -897,8 +897,8 @@ class Beat4_RichtigAuslegen(Scene):
             return floor_out / PEAK_F if on else 0.0
 
         self.add(reserve)
-        self.play(FadeOut(gap), _ramp(cap, big), _ramp(x, 0.45), *_life(house, level, 1.8), run_time=1.8)
-        self.play(FadeIn(taktet), _ramp(x, 0.9, rate_func=linear), *_life(house, cycled, 4.0), run_time=4.0)
+        self.play(FadeOut(gap), _ramp(cap, big), _ramp(x, 0.4), *_life(house, level, 1.8), run_time=1.8)
+        self.play(FadeIn(taktet), _ramp(x, 0.66, rate_func=linear), *_life(house, cycled, 4.0), run_time=4.0)
         hold_for(self, N, "zugross", during=lambda rt: _life(house, cycled, rt))
 
         caption = swap_caption(self, caption, subtitle_text(N, "richtig"))
@@ -919,8 +919,8 @@ class Beat4_RichtigAuslegen(Scene):
         for m in cap_read.get_family():
             m.clear_updaters()
         self.play(FadeOut(cap_line), FadeOut(cap_read), _ramp(x, 0.0), *_life(house, level, 0.8), run_time=0.8)
-        self.play(FadeIn(tank["group"]), FadeIn(tank["fill"]), FadeIn(q_tag), FadeIn(q_read), *_life(house, level, 0.6),
-                  run_time=0.6)
+        self.add(tank["fill"], q_read)
+        self.play(FadeIn(tank["group"]), FadeIn(q_tag), *_life(house, level, 0.6), run_time=0.6)
         self.play(_ramp(x, 1.0, rate_func=linear), *_life(house, level, 4.0), run_time=4.0)
         q_final = math_label(rf"Q_{{h}} \approx {de_num(q_year)}\,\mathrm{{kWh/a}}", np.array([2.2, 0.72, 0.0]),
                              size=BODY_FONT_SIZE, color=ENERGY, edge="left")

@@ -1,9 +1,9 @@
 Manim Community v0.21.0
 
-[10/14/26 18:39:17] INFO     Animation 0 : Using cached     cairo_renderer.py:92
+[10/14/26 18:49:00] INFO     Animation 0 : Using cached     cairo_renderer.py:92
                              data (hash :                                       
                              34895980_1754632401_140736853)                     
-Animation 0: FadeIn(Text('Erzeugung: Wirkungsgrad oder Arbeitszahl')), etc.:   0%|          | 0/1 [00:00<?, ?it/s]                                                                                                                  [10/14/26 18:39:18] INFO     Animation 1 : Using cached     cairo_renderer.py:92
+Animation 0: FadeIn(Text('Erzeugung: Wirkungsgrad oder Arbeitszahl')), etc.:   0%|          | 0/1 [00:00<?, ?it/s]                                                                                                                  [10/14/26 18:49:01] INFO     Animation 1 : Using cached     cairo_renderer.py:92
                              data (hash :                                       
                              2119445635_106565066_177530413                     
                              2)                                                 
@@ -11,7 +11,7 @@ Manim Community v0.21.0
                              data (hash :                                       
                              2119445635_174783059_267357093                     
                              9)                                                 
-Animation 2: Create(DashedLine), etc.:   0%|          | 0/1 [00:00<?, ?it/s]                                                                            Animation 3: _MethodAnimation(ValueTracker), etc.:   0%|          | 0/18 [00:00<?, ?it/s]Animation 3: _MethodAnimation(ValueTracker), etc.:  22%|██▏       | 4/18 [00:00<00:00, 39.87it/s]Animation 3: _MethodAnimation(ValueTracker), etc.:  44%|████▍     | 8/18 [00:00<00:00, 25.94it/s]Animation 3: _MethodAnimation(ValueTracker), etc.:  61%|██████    | 11/18 [00:00<00:00, 21.11it/s]Animation 3: _MethodAnimation(ValueTracker), etc.:  78%|███████▊  | 14/18 [00:00<00:00, 20.00it/s]Animation 3: _MethodAnimation(ValueTracker), etc.:  94%|█████████▍| 17/18 [00:00<00:00, 19.44it/s]                                                                                                  [10/14/26 18:39:20] INFO     Animation 3 : Partial      scene_file_writer.py:192
+Animation 2: Create(DashedLine), etc.:   0%|          | 0/1 [00:00<?, ?it/s]                                                                            Animation 3: _MethodAnimation(ValueTracker), etc.:   0%|          | 0/18 [00:00<?, ?it/s]Animation 3: _MethodAnimation(ValueTracker), etc.:  28%|██▊       | 5/18 [00:00<00:00, 37.46it/s]Animation 3: _MethodAnimation(ValueTracker), etc.:  50%|█████     | 9/18 [00:00<00:00, 27.25it/s]Animation 3: _MethodAnimation(ValueTracker), etc.:  67%|██████▋   | 12/18 [00:00<00:00, 24.92it/s]Animation 3: _MethodAnimation(ValueTracker), etc.:  83%|████████▎ | 15/18 [00:00<00:00, 23.79it/s]Animation 3: _MethodAnimation(ValueTracker), etc.: 100%|██████████| 18/18 [00:00<00:00, 23.59it/s]                                                                                                  [10/14/26 18:49:02] INFO     Animation 3 : Partial      scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -20,9 +20,9 @@ Manim Community v0.21.0
                              -GLYPHS/checks/ch4_media/v                         
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat3_Erzeu                         
-                             gung/2119445635_3767064487                         
-                             _1811015629.mp4'                                   
-Animation 4: UpdateFromAlphaFunc(VGroup of 3 submobjects), etc.:   0%|          | 0/93 [00:00<?, ?it/s]Animation 4: UpdateFromAlphaFunc(VGroup of 3 submobjects), etc.:  31%|███       | 29/93 [00:00<00:00, 286.06it/s]Animation 4: UpdateFromAlphaFunc(VGroup of 3 submobjects), etc.:  62%|██████▏   | 58/93 [00:00<00:00, 241.91it/s]Animation 4: UpdateFromAlphaFunc(VGroup of 3 submobjects), etc.:  89%|████████▉ | 83/93 [00:00<00:00, 233.95it/s]                                                                                                                 [10/14/26 18:39:21] INFO     Animation 4 : Partial      scene_file_writer.py:192
+                             gung/2119445635_2968868300                         
+                             _1700108220.mp4'                                   
+Animation 4: UpdateFromAlphaFunc(VGroup of 3 submobjects), etc.:   0%|          | 0/93 [00:00<?, ?it/s]Animation 4: UpdateFromAlphaFunc(VGroup of 3 submobjects), etc.:  35%|███▌      | 33/93 [00:00<00:00, 325.14it/s]Animation 4: UpdateFromAlphaFunc(VGroup of 3 submobjects), etc.:  71%|███████   | 66/93 [00:00<00:00, 310.72it/s]                                                                                                                 [10/14/26 18:49:03] INFO     Animation 4 : Partial      scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -31,9 +31,9 @@ Manim Community v0.21.0
                              -GLYPHS/checks/ch4_media/v                         
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat3_Erzeu                         
-                             gung/2119445635_241379856_                         
-                             2818868746.mp4'                                    
-Animation 5: FadeOut(VGroup of 2 submobjects), etc.:   0%|          | 0/3 [00:00<?, ?it/s]                                                                                          [10/14/26 18:39:22] INFO     Animation 5 : Partial      scene_file_writer.py:192
+                             gung/2119445635_944253315_                         
+                             1607730955.mp4'                                    
+Animation 5: FadeOut(VGroup of 2 submobjects), etc.:   0%|          | 0/3 [00:00<?, ?it/s]                                                                                          [10/14/26 18:49:04] INFO     Animation 5 : Partial      scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -42,9 +42,9 @@ Manim Community v0.21.0
                              -GLYPHS/checks/ch4_media/v                         
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat3_Erzeu                         
-                             gung/2119445635_1326762384                         
-                             _1374088695.mp4'                                   
-Animation 6: FadeIn(VGroup of 2 submobjects), etc.:   0%|          | 0/3 [00:00<?, ?it/s]                                                                                         [10/14/26 18:39:23] INFO     Animation 6 : Partial      scene_file_writer.py:192
+                             gung/2119445635_2356246488                         
+                             _2192896554.mp4'                                   
+Animation 6: FadeIn(VGroup of 2 submobjects), etc.:   0%|          | 0/3 [00:00<?, ?it/s]                                                                                         [10/14/26 18:49:05] INFO     Animation 6 : Partial      scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -53,9 +53,9 @@ Manim Community v0.21.0
                              -GLYPHS/checks/ch4_media/v                         
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat3_Erzeu                         
-                             gung/2119445635_4133016807                         
-                             _1666405817.mp4'                                   
-Animation 7: FadeIn(VGroup of 6 submobjects), etc.:   0%|          | 0/12 [00:00<?, ?it/s]Animation 7: FadeIn(VGroup of 6 submobjects), etc.:  75%|███████▌  | 9/12 [00:00<00:00, 82.40it/s]                                                                                                  [10/14/26 18:39:24] INFO     Animation 7 : Partial      scene_file_writer.py:192
+                             gung/2119445635_893217455_                         
+                             1734272208.mp4'                                    
+Animation 7: FadeIn(VGroup of 6 submobjects), etc.:   0%|          | 0/12 [00:00<?, ?it/s]Animation 7: FadeIn(VGroup of 6 submobjects), etc.:  83%|████████▎ | 10/12 [00:00<00:00, 91.80it/s]                                                                                                   [10/14/26 18:49:06] INFO     Animation 7 : Partial      scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -64,9 +64,9 @@ Manim Community v0.21.0
                              -GLYPHS/checks/ch4_media/v                         
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat3_Erzeu                         
-                             gung/2119445635_1053301611                         
-                             _3479103860.mp4'                                   
-Animation 8: _MethodAnimation(ValueTracker), etc.:   0%|          | 0/30 [00:00<?, ?it/s]Animation 8: _MethodAnimation(ValueTracker), etc.:  17%|█▋        | 5/30 [00:00<00:00, 39.94it/s]Animation 8: _MethodAnimation(ValueTracker), etc.:  30%|███       | 9/30 [00:00<00:00, 28.21it/s]Animation 8: _MethodAnimation(ValueTracker), etc.:  40%|████      | 12/30 [00:00<00:00, 24.38it/s]Animation 8: _MethodAnimation(ValueTracker), etc.:  50%|█████     | 15/30 [00:00<00:00, 22.69it/s]Animation 8: _MethodAnimation(ValueTracker), etc.:  60%|██████    | 18/30 [00:00<00:00, 20.83it/s]Animation 8: _MethodAnimation(ValueTracker), etc.:  70%|███████   | 21/30 [00:00<00:00, 19.66it/s]Animation 8: _MethodAnimation(ValueTracker), etc.:  77%|███████▋  | 23/30 [00:01<00:00, 18.19it/s]Animation 8: _MethodAnimation(ValueTracker), etc.:  83%|████████▎ | 25/30 [00:01<00:00, 18.01it/s]Animation 8: _MethodAnimation(ValueTracker), etc.:  90%|█████████ | 27/30 [00:01<00:00, 18.43it/s]Animation 8: _MethodAnimation(ValueTracker), etc.:  97%|█████████▋| 29/30 [00:01<00:00, 17.25it/s]                                                                                                  [10/14/26 18:39:26] INFO     Animation 8 : Partial      scene_file_writer.py:192
+                             gung/2119445635_2686537490                         
+                             _1367636640.mp4'                                   
+Animation 8: _MethodAnimation(ValueTracker), etc.:   0%|          | 0/30 [00:00<?, ?it/s]Animation 8: _MethodAnimation(ValueTracker), etc.:  17%|█▋        | 5/30 [00:00<00:00, 42.79it/s]Animation 8: _MethodAnimation(ValueTracker), etc.:  33%|███▎      | 10/30 [00:00<00:00, 30.78it/s]Animation 8: _MethodAnimation(ValueTracker), etc.:  47%|████▋     | 14/30 [00:00<00:00, 27.70it/s]Animation 8: _MethodAnimation(ValueTracker), etc.:  57%|█████▋    | 17/30 [00:00<00:00, 26.52it/s]Animation 8: _MethodAnimation(ValueTracker), etc.:  67%|██████▋   | 20/30 [00:00<00:00, 25.40it/s]Animation 8: _MethodAnimation(ValueTracker), etc.:  77%|███████▋  | 23/30 [00:00<00:00, 24.10it/s]Animation 8: _MethodAnimation(ValueTracker), etc.:  87%|████████▋ | 26/30 [00:01<00:00, 22.17it/s]Animation 8: _MethodAnimation(ValueTracker), etc.:  97%|█████████▋| 29/30 [00:01<00:00, 21.01it/s]                                                                                                  [10/14/26 18:49:07] INFO     Animation 8 : Partial      scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -75,9 +75,9 @@ Manim Community v0.21.0
                              -GLYPHS/checks/ch4_media/v                         
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat3_Erzeu                         
-                             gung/2119445635_2271043657                         
-                             _2521381428.mp4'                                   
-Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:   0%|          | 0/146 [00:00<?, ?it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:   5%|▌         | 8/146 [00:00<00:01, 75.08it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  11%|█         | 16/146 [00:00<00:01, 76.88it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  16%|█▋        | 24/146 [00:00<00:01, 76.60it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  22%|██▏       | 32/146 [00:00<00:01, 77.88it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  28%|██▊       | 41/146 [00:00<00:01, 78.69it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  34%|███▎      | 49/146 [00:00<00:01, 76.80it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  39%|███▉      | 57/146 [00:00<00:01, 77.02it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  45%|████▍     | 65/146 [00:00<00:01, 72.81it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  50%|█████     | 73/146 [00:00<00:01, 71.88it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  55%|█████▌    | 81/146 [00:01<00:00, 71.04it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  62%|██████▏   | 90/146 [00:01<00:00, 73.81it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  67%|██████▋   | 98/146 [00:01<00:00, 72.48it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  73%|███████▎  | 106/146 [00:01<00:00, 71.83it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  78%|███████▊  | 114/146 [00:01<00:00, 72.63it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  84%|████████▎ | 122/146 [00:01<00:00, 73.74it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  89%|████████▉ | 130/146 [00:01<00:00, 73.67it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  95%|█████████▍| 138/146 [00:01<00:00, 71.20it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.: 100%|██████████| 146/146 [00:02<00:00, 65.91it/s]                                                                                                                  [10/14/26 18:39:29] INFO     Animation 9 : Partial      scene_file_writer.py:192
+                             gung/2119445635_1571561071                         
+                             _1820215457.mp4'                                   
+Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:   0%|          | 0/146 [00:00<?, ?it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:   6%|▌         | 9/146 [00:00<00:01, 83.00it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  12%|█▏        | 18/146 [00:00<00:01, 82.96it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  18%|█▊        | 27/146 [00:00<00:01, 82.29it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  25%|██▍       | 36/146 [00:00<00:01, 81.81it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  31%|███       | 45/146 [00:00<00:01, 80.10it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  37%|███▋      | 54/146 [00:00<00:01, 78.04it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  42%|████▏     | 62/146 [00:00<00:01, 76.92it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  48%|████▊     | 70/146 [00:00<00:00, 76.18it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  53%|█████▎    | 78/146 [00:00<00:00, 75.48it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  59%|█████▉    | 86/146 [00:01<00:00, 74.67it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  64%|██████▍   | 94/146 [00:01<00:00, 73.96it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  70%|██████▉   | 102/146 [00:01<00:00, 73.67it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  75%|███████▌  | 110/146 [00:01<00:00, 72.04it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  81%|████████  | 118/146 [00:01<00:00, 69.98it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  86%|████████▋ | 126/146 [00:01<00:00, 69.29it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  91%|█████████ | 133/146 [00:01<00:00, 68.84it/s]Animation 9: UpdateFromAlphaFunc(VGroup of 6 submobjects), etc.:  96%|█████████▌| 140/146 [00:01<00:00, 68.55it/s]                                                                                                                  [10/14/26 18:49:10] INFO     Animation 9 : Partial      scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -86,9 +86,9 @@ Manim Community v0.21.0
                              -GLYPHS/checks/ch4_media/v                         
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat3_Erzeu                         
-                             gung/2119445635_3697895355                         
-                             _3444418217.mp4'                                   
-Animation 10: FadeOut(VGroup of 2 submobjects), etc.:   0%|          | 0/3 [00:00<?, ?it/s]                                                                                           [10/14/26 18:39:31] INFO     Animation 10 : Partial     scene_file_writer.py:192
+                             gung/2119445635_3430361214                         
+                             _865555471.mp4'                                    
+Animation 10: FadeOut(VGroup of 2 submobjects), etc.:   0%|          | 0/3 [00:00<?, ?it/s]                                                                                           [10/14/26 18:49:12] INFO     Animation 10 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -97,9 +97,9 @@ Manim Community v0.21.0
                              -GLYPHS/checks/ch4_media/v                         
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat3_Erzeu                         
-                             gung/2119445635_4217084043                         
-                             _1379037184.mp4'                                   
-Animation 11: FadeIn(VGroup of 2 submobjects), etc.:   0%|          | 0/3 [00:00<?, ?it/s]                                                                                          [10/14/26 18:39:32] INFO     Animation 11 : Partial     scene_file_writer.py:192
+                             gung/2119445635_2673129254                         
+                             _356925241.mp4'                                    
+Animation 11: FadeIn(VGroup of 2 submobjects), etc.:   0%|          | 0/3 [00:00<?, ?it/s]                                                                                          [10/14/26 18:49:13] INFO     Animation 11 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -108,9 +108,9 @@ Manim Community v0.21.0
                              -GLYPHS/checks/ch4_media/v                         
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat3_Erzeu                         
-                             gung/2119445635_741170514_                         
-                             4215808949.mp4'                                    
-Animation 12: FadeIn(Text('Brennwert: Wasserdampf im Abgas kondensiert → latente Wärme wird nutzbar')), etc.:   0%|          | 0/33 [00:00<?, ?it/s]Animation 12: FadeIn(Text('Brennwert: Wasserdampf im Abgas kondensiert → latente Wärme wird nutzbar')), etc.:  12%|█▏        | 4/33 [00:00<00:00, 40.00it/s]Animation 12: FadeIn(Text('Brennwert: Wasserdampf im Abgas kondensiert → latente Wärme wird nutzbar')), etc.:  24%|██▍       | 8/33 [00:00<00:00, 25.86it/s]Animation 12: FadeIn(Text('Brennwert: Wasserdampf im Abgas kondensiert → latente Wärme wird nutzbar')), etc.:  36%|███▋      | 12/33 [00:00<00:00, 22.76it/s]Animation 12: FadeIn(Text('Brennwert: Wasserdampf im Abgas kondensiert → latente Wärme wird nutzbar')), etc.:  45%|████▌     | 15/33 [00:00<00:00, 20.35it/s]Animation 12: FadeIn(Text('Brennwert: Wasserdampf im Abgas kondensiert → latente Wärme wird nutzbar')), etc.:  55%|█████▍    | 18/33 [00:01<00:01,  9.96it/s]Animation 12: FadeIn(Text('Brennwert: Wasserdampf im Abgas kondensiert → latente Wärme wird nutzbar')), etc.:  61%|██████    | 20/33 [00:01<00:01,  9.39it/s]Animation 12: FadeIn(Text('Brennwert: Wasserdampf im Abgas kondensiert → latente Wärme wird nutzbar')), etc.:  67%|██████▋   | 22/33 [00:01<00:01, 10.24it/s]Animation 12: FadeIn(Text('Brennwert: Wasserdampf im Abgas kondensiert → latente Wärme wird nutzbar')), etc.:  73%|███████▎  | 24/33 [00:01<00:00, 10.92it/s]Animation 12: FadeIn(Text('Brennwert: Wasserdampf im Abgas kondensiert → latente Wärme wird nutzbar')), etc.:  85%|████████▍ | 28/33 [00:02<00:00, 13.69it/s]Animation 12: FadeIn(Text('Brennwert: Wasserdampf im Abgas kondensiert → latente Wärme wird nutzbar')), etc.:  97%|█████████▋| 32/33 [00:02<00:00, 18.12it/s]                                                                                                                                                             [10/14/26 18:39:36] INFO     Animation 12 : Partial     scene_file_writer.py:192
+                             gung/2119445635_1210217215                         
+                             _1778931583.mp4'                                   
+Animation 12: FadeIn(Text('Brennwert: Wasserdampf im Abgas kondensiert → latente Wärme wird nutzbar')), etc.:   0%|          | 0/33 [00:00<?, ?it/s]Animation 12: FadeIn(Text('Brennwert: Wasserdampf im Abgas kondensiert → latente Wärme wird nutzbar')), etc.:  18%|█▊        | 6/33 [00:00<00:00, 53.82it/s]Animation 12: FadeIn(Text('Brennwert: Wasserdampf im Abgas kondensiert → latente Wärme wird nutzbar')), etc.:  36%|███▋      | 12/33 [00:00<00:00, 31.89it/s]Animation 12: FadeIn(Text('Brennwert: Wasserdampf im Abgas kondensiert → latente Wärme wird nutzbar')), etc.:  48%|████▊     | 16/33 [00:00<00:00, 25.09it/s]Animation 12: FadeIn(Text('Brennwert: Wasserdampf im Abgas kondensiert → latente Wärme wird nutzbar')), etc.:  58%|█████▊    | 19/33 [00:00<00:00, 19.54it/s]Animation 12: FadeIn(Text('Brennwert: Wasserdampf im Abgas kondensiert → latente Wärme wird nutzbar')), etc.:  67%|██████▋   | 22/33 [00:01<00:00, 17.13it/s]Animation 12: FadeIn(Text('Brennwert: Wasserdampf im Abgas kondensiert → latente Wärme wird nutzbar')), etc.:  73%|███████▎  | 24/33 [00:01<00:00, 17.55it/s]Animation 12: FadeIn(Text('Brennwert: Wasserdampf im Abgas kondensiert → latente Wärme wird nutzbar')), etc.:  85%|████████▍ | 28/33 [00:01<00:00, 20.45it/s]Animation 12: FadeIn(Text('Brennwert: Wasserdampf im Abgas kondensiert → latente Wärme wird nutzbar')), etc.: 100%|██████████| 33/33 [00:01<00:00, 26.70it/s]                                                                                                                                                             [10/14/26 18:49:15] INFO     Animation 12 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -119,9 +119,9 @@ Manim Community v0.21.0
                              -GLYPHS/checks/ch4_media/v                         
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat3_Erzeu                         
-                             gung/2119445635_1195513413                         
-                             _3309592210.mp4'                                   
-Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:   0%|          | 0/136 [00:00<?, ?it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:   4%|▎         | 5/136 [00:00<00:03, 40.51it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:   7%|▋         | 10/136 [00:00<00:03, 33.25it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  10%|█         | 14/136 [00:00<00:03, 32.53it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  13%|█▎        | 18/136 [00:00<00:03, 33.37it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  16%|█▌        | 22/136 [00:00<00:03, 33.94it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  19%|█▉        | 26/136 [00:00<00:03, 34.01it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  22%|██▏       | 30/136 [00:00<00:03, 35.27it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  25%|██▌       | 34/136 [00:00<00:02, 36.18it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  28%|██▊       | 38/136 [00:01<00:02, 37.09it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  31%|███       | 42/136 [00:01<00:02, 37.64it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  34%|███▍      | 46/136 [00:01<00:02, 36.80it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  37%|███▋      | 50/136 [00:01<00:02, 36.87it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  40%|███▉      | 54/136 [00:01<00:02, 36.76it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  43%|████▎     | 58/136 [00:01<00:02, 37.02it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  46%|████▌     | 62/136 [00:01<00:01, 37.16it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  49%|████▊     | 66/136 [00:01<00:01, 37.95it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  51%|█████▏    | 70/136 [00:01<00:01, 38.51it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  55%|█████▌    | 75/136 [00:02<00:01, 38.80it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  58%|█████▊    | 79/136 [00:02<00:01, 38.71it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  61%|██████    | 83/136 [00:02<00:01, 37.66it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  64%|██████▍   | 87/136 [00:02<00:01, 37.96it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  67%|██████▋   | 91/136 [00:02<00:01, 37.66it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  71%|███████   | 96/136 [00:02<00:01, 38.88it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  74%|███████▎  | 100/136 [00:02<00:00, 37.48it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  76%|███████▋  | 104/136 [00:02<00:00, 37.70it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  80%|████████  | 109/136 [00:02<00:00, 38.76it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  83%|████████▎ | 113/136 [00:03<00:00, 39.05it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  87%|████████▋ | 118/136 [00:03<00:00, 40.30it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  90%|█████████ | 123/136 [00:03<00:00, 41.03it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  94%|█████████▍| 128/136 [00:03<00:00, 41.19it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  98%|█████████▊| 133/136 [00:03<00:00, 40.90it/s]                                                                                                                   [10/14/26 18:39:42] INFO     Animation 13 : Partial     scene_file_writer.py:192
+                             gung/2119445635_2229810617                         
+                             _3467993544.mp4'                                   
+Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:   0%|          | 0/136 [00:00<?, ?it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:   4%|▍         | 6/136 [00:00<00:02, 59.42it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  10%|▉         | 13/136 [00:00<00:02, 60.19it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  15%|█▍        | 20/136 [00:00<00:01, 60.71it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  20%|█▉        | 27/136 [00:00<00:01, 58.52it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  24%|██▍       | 33/136 [00:00<00:01, 57.11it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  29%|██▊       | 39/136 [00:00<00:01, 56.54it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  33%|███▎      | 45/136 [00:00<00:01, 55.79it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  38%|███▊      | 51/136 [00:00<00:01, 55.23it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  42%|████▏     | 57/136 [00:01<00:01, 55.71it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  46%|████▋     | 63/136 [00:01<00:01, 56.84it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  51%|█████     | 69/136 [00:01<00:01, 57.44it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  55%|█████▌    | 75/136 [00:01<00:01, 57.88it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  60%|█████▉    | 81/136 [00:01<00:00, 58.21it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  64%|██████▍   | 87/136 [00:01<00:00, 58.34it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  68%|██████▊   | 93/136 [00:01<00:00, 58.57it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  73%|███████▎  | 99/136 [00:01<00:00, 58.35it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  77%|███████▋  | 105/136 [00:01<00:00, 58.13it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  82%|████████▏ | 111/136 [00:01<00:00, 57.20it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  86%|████████▌ | 117/136 [00:02<00:00, 57.97it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  91%|█████████ | 124/136 [00:02<00:00, 59.68it/s]Animation 13: UpdateFromAlphaFunc(VGroup of 7 submobjects), etc.:  96%|█████████▋| 131/136 [00:02<00:00, 61.72it/s]                                                                                                                   [10/14/26 18:49:19] INFO     Animation 13 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -130,9 +130,9 @@ Manim Community v0.21.0
                              -GLYPHS/checks/ch4_media/v                         
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat3_Erzeu                         
-                             gung/2119445635_853553693_                         
-                             3977748581.mp4'                                    
-Animation 14: FadeOut(VGroup of 2 submobjects), etc.:   0%|          | 0/3 [00:00<?, ?it/s]                                                                                           [10/14/26 18:39:45] INFO     Animation 14 : Partial     scene_file_writer.py:192
+                             gung/2119445635_1136829114                         
+                             _786304490.mp4'                                    
+Animation 14: FadeOut(VGroup of 2 submobjects), etc.:   0%|          | 0/3 [00:00<?, ?it/s]                                                                                           [10/14/26 18:49:21] INFO     Animation 14 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -141,9 +141,9 @@ Manim Community v0.21.0
                              -GLYPHS/checks/ch4_media/v                         
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat3_Erzeu                         
-                             gung/2119445635_454213445_                         
-                             104409283.mp4'                                     
-Animation 15: FadeIn(VGroup of 2 submobjects), etc.:   0%|          | 0/3 [00:00<?, ?it/s]                                                                                          [10/14/26 18:39:46] INFO     Animation 15 : Partial     scene_file_writer.py:192
+                             gung/2119445635_3645435581                         
+                             _1697089117.mp4'                                   
+Animation 15: FadeIn(VGroup of 2 submobjects), etc.:   0%|          | 0/3 [00:00<?, ?it/s]                                                                                          [10/14/26 18:49:22] INFO     Animation 15 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -152,9 +152,9 @@ Manim Community v0.21.0
                              -GLYPHS/checks/ch4_media/v                         
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat3_Erzeu                         
-                             gung/2119445635_1527193155                         
-                             _3806052204.mp4'                                   
-Animation 16: FadeOut(Text('Brennwert: Wasserdampf im Abgas kondensiert → latente Wärme wird nutzbar')), etc.:   0%|          | 0/5 [00:00<?, ?it/s]Animation 16: FadeOut(Text('Brennwert: Wasserdampf im Abgas kondensiert → latente Wärme wird nutzbar')), etc.:  80%|████████  | 4/5 [00:00<00:00, 33.37it/s]                                                                                                                                                            [10/14/26 18:39:48] INFO     Animation 16 : Partial     scene_file_writer.py:192
+                             gung/2119445635_2573029307                         
+                             _3273232329.mp4'                                   
+Animation 16: FadeOut(Text('Brennwert: Wasserdampf im Abgas kondensiert → latente Wärme wird nutzbar')), etc.:   0%|          | 0/5 [00:00<?, ?it/s]Animation 16: FadeOut(Text('Brennwert: Wasserdampf im Abgas kondensiert → latente Wärme wird nutzbar')), etc.: 100%|██████████| 5/5 [00:00<00:00, 49.44it/s]                                                                                                                                                            [10/14/26 18:49:23] INFO     Animation 16 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -163,9 +163,9 @@ Manim Community v0.21.0
                              -GLYPHS/checks/ch4_media/v                         
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat3_Erzeu                         
-                             gung/2119445635_754454798_                         
-                             2421838135.mp4'                                    
-Animation 17: _MethodAnimation(ValueTracker), etc.:   0%|          | 0/33 [00:00<?, ?it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  12%|█▏        | 4/33 [00:00<00:00, 30.68it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  24%|██▍       | 8/33 [00:00<00:01, 22.75it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  33%|███▎      | 11/33 [00:00<00:01, 14.20it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  39%|███▉      | 13/33 [00:00<00:01, 12.76it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  45%|████▌     | 15/33 [00:01<00:01, 11.27it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  52%|█████▏    | 17/33 [00:01<00:01, 10.82it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  58%|█████▊    | 19/33 [00:01<00:01, 10.49it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  64%|██████▎   | 21/33 [00:01<00:01, 10.29it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  70%|██████▉   | 23/33 [00:01<00:00, 10.07it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  76%|███████▌  | 25/33 [00:02<00:00,  9.80it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  82%|████████▏ | 27/33 [00:02<00:00, 10.23it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  88%|████████▊ | 29/33 [00:02<00:00, 10.46it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  94%|█████████▍| 31/33 [00:02<00:00, 10.46it/s]Animation 17: _MethodAnimation(ValueTracker), etc.: 100%|██████████| 33/33 [00:02<00:00, 11.71it/s]                                                                                                   [10/14/26 18:39:52] INFO     Animation 17 : Partial     scene_file_writer.py:192
+                             gung/2119445635_4081243524                         
+                             _3166569566.mp4'                                   
+Animation 17: _MethodAnimation(ValueTracker), etc.:   0%|          | 0/33 [00:00<?, ?it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  12%|█▏        | 4/33 [00:00<00:00, 35.79it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  24%|██▍       | 8/33 [00:00<00:00, 29.27it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  36%|███▋      | 12/33 [00:00<00:00, 21.26it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  45%|████▌     | 15/33 [00:00<00:01, 16.87it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  52%|█████▏    | 17/33 [00:00<00:00, 16.03it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  58%|█████▊    | 19/33 [00:01<00:00, 14.53it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  64%|██████▎   | 21/33 [00:01<00:00, 14.64it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  70%|██████▉   | 23/33 [00:01<00:00, 13.80it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  76%|███████▌  | 25/33 [00:01<00:00, 13.31it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  82%|████████▏ | 27/33 [00:01<00:00, 13.78it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  88%|████████▊ | 29/33 [00:01<00:00, 14.83it/s]Animation 17: _MethodAnimation(ValueTracker), etc.:  94%|█████████▍| 31/33 [00:01<00:00, 14.93it/s]                                                                                                   [10/14/26 18:49:26] INFO     Animation 17 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -174,9 +174,9 @@ Manim Community v0.21.0
                              -GLYPHS/checks/ch4_media/v                         
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat3_Erzeu                         
-                             gung/2119445635_1801956815                         
-                             _341394514.mp4'                                    
-Animation 18: FadeIn(Text('zugekauft')), etc.:   0%|          | 0/12 [00:00<?, ?it/s]Animation 18: FadeIn(Text('zugekauft')), etc.:  33%|███▎      | 4/12 [00:00<00:00, 33.79it/s]Animation 18: FadeIn(Text('zugekauft')), etc.:  67%|██████▋   | 8/12 [00:00<00:00, 30.03it/s]Animation 18: FadeIn(Text('zugekauft')), etc.: 100%|██████████| 12/12 [00:00<00:00, 32.12it/s]                                                                                              [10/14/26 18:39:54] INFO     Animation 18 : Partial     scene_file_writer.py:192
+                             gung/2119445635_3148775550                         
+                             _1571127460.mp4'                                   
+Animation 18: FadeIn(Text('zugekauft')), etc.:   0%|          | 0/12 [00:00<?, ?it/s]Animation 18: FadeIn(Text('zugekauft')), etc.:  50%|█████     | 6/12 [00:00<00:00, 54.65it/s]Animation 18: FadeIn(Text('zugekauft')), etc.: 100%|██████████| 12/12 [00:00<00:00, 55.05it/s]                                                                                              [10/14/26 18:49:27] INFO     Animation 18 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -185,9 +185,9 @@ Manim Community v0.21.0
                              -GLYPHS/checks/ch4_media/v                         
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat3_Erzeu                         
-                             gung/2119445635_2862039653                         
-                             _802688642.mp4'                                    
-Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:   0%|          | 0/110 [00:00<?, ?it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:   4%|▎         | 4/110 [00:00<00:02, 37.08it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:   7%|▋         | 8/110 [00:00<00:02, 36.42it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  11%|█         | 12/110 [00:00<00:02, 35.94it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  15%|█▍        | 16/110 [00:00<00:02, 35.39it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  18%|█▊        | 20/110 [00:00<00:02, 35.45it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  22%|██▏       | 24/110 [00:00<00:02, 35.69it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  25%|██▌       | 28/110 [00:00<00:02, 34.97it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  29%|██▉       | 32/110 [00:00<00:02, 34.46it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  33%|███▎      | 36/110 [00:01<00:02, 34.22it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  36%|███▋      | 40/110 [00:01<00:02, 34.17it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  40%|████      | 44/110 [00:01<00:01, 34.29it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  44%|████▎     | 48/110 [00:01<00:01, 34.42it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  47%|████▋     | 52/110 [00:01<00:01, 33.96it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  51%|█████     | 56/110 [00:01<00:01, 34.79it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  55%|█████▍    | 60/110 [00:01<00:01, 34.30it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  58%|█████▊    | 64/110 [00:01<00:01, 35.19it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  62%|██████▏   | 68/110 [00:01<00:01, 35.28it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  65%|██████▌   | 72/110 [00:02<00:01, 35.14it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  69%|██████▉   | 76/110 [00:02<00:00, 35.15it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  73%|███████▎  | 80/110 [00:02<00:00, 30.30it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  76%|███████▋  | 84/110 [00:02<00:00, 28.40it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  80%|████████  | 88/110 [00:02<00:00, 29.35it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  84%|████████▎ | 92/110 [00:02<00:00, 30.44it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  87%|████████▋ | 96/110 [00:02<00:00, 31.15it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  91%|█████████ | 100/110 [00:03<00:00, 28.60it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  95%|█████████▍| 104/110 [00:03<00:00, 30.07it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  98%|█████████▊| 108/110 [00:03<00:00, 31.01it/s]                                                                                                                   [10/14/26 18:40:00] INFO     Animation 19 : Partial     scene_file_writer.py:192
+                             gung/2119445635_1766480779                         
+                             _2058194188.mp4'                                   
+Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:   0%|          | 0/110 [00:00<?, ?it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:   5%|▌         | 6/110 [00:00<00:01, 56.26it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  11%|█         | 12/110 [00:00<00:01, 56.55it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  16%|█▋        | 18/110 [00:00<00:01, 57.12it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  22%|██▏       | 24/110 [00:00<00:01, 56.42it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  27%|██▋       | 30/110 [00:00<00:01, 55.89it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  33%|███▎      | 36/110 [00:00<00:01, 55.54it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  38%|███▊      | 42/110 [00:00<00:01, 55.60it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  44%|████▎     | 48/110 [00:00<00:01, 55.11it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  49%|████▉     | 54/110 [00:00<00:01, 54.24it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  55%|█████▍    | 60/110 [00:01<00:00, 53.54it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  60%|██████    | 66/110 [00:01<00:00, 52.56it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  65%|██████▌   | 72/110 [00:01<00:00, 52.07it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  71%|███████   | 78/110 [00:01<00:00, 51.68it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  76%|███████▋  | 84/110 [00:01<00:00, 51.43it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  82%|████████▏ | 90/110 [00:01<00:00, 51.79it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  87%|████████▋ | 96/110 [00:01<00:00, 52.10it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  93%|█████████▎| 102/110 [00:01<00:00, 52.10it/s]Animation 19: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  98%|█████████▊| 108/110 [00:02<00:00, 51.91it/s]                                                                                                                   [10/14/26 18:49:31] INFO     Animation 19 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -196,9 +196,9 @@ Manim Community v0.21.0
                              -GLYPHS/checks/ch4_media/v                         
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat3_Erzeu                         
-                             gung/2119445635_1099821833                         
-                             _2150265177.mp4'                                   
-Animation 20: FadeOut(VGroup of 2 submobjects), etc.:   0%|          | 0/3 [00:00<?, ?it/s]                                                                                           [10/14/26 18:40:03] INFO     Animation 20 : Partial     scene_file_writer.py:192
+                             gung/2119445635_1332013252                         
+                             _2681536920.mp4'                                   
+Animation 20: FadeOut(VGroup of 2 submobjects), etc.:   0%|          | 0/3 [00:00<?, ?it/s]                                                                                           [10/14/26 18:49:33] INFO     Animation 20 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -207,9 +207,9 @@ Manim Community v0.21.0
                              -GLYPHS/checks/ch4_media/v                         
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat3_Erzeu                         
-                             gung/2119445635_829752384_                         
-                             1438707918.mp4'                                    
-Animation 21: FadeIn(VGroup of 2 submobjects), etc.:   0%|          | 0/3 [00:00<?, ?it/s]Animation 21: FadeIn(VGroup of 2 submobjects), etc.: 100%|██████████| 3/3 [00:00<00:00, 28.46it/s]                                                                                                  [10/14/26 18:40:05] INFO     Animation 21 : Partial     scene_file_writer.py:192
+                             gung/2119445635_584680172_                         
+                             4271132188.mp4'                                    
+Animation 21: FadeIn(VGroup of 2 submobjects), etc.:   0%|          | 0/3 [00:00<?, ?it/s]                                                                                          [10/14/26 18:49:34] INFO     Animation 21 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -218,9 +218,9 @@ Manim Community v0.21.0
                              -GLYPHS/checks/ch4_media/v                         
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat3_Erzeu                         
-                             gung/2119445635_3576315573                         
-                             _1451097850.mp4'                                   
-Animation 22: Create(SurroundingRectangle), etc.:   0%|          | 0/30 [00:00<?, ?it/s]Animation 22: Create(SurroundingRectangle), etc.:  13%|█▎        | 4/30 [00:00<00:00, 30.58it/s]Animation 22: Create(SurroundingRectangle), etc.:  27%|██▋       | 8/30 [00:00<00:00, 23.69it/s]Animation 22: Create(SurroundingRectangle), etc.:  37%|███▋      | 11/30 [00:00<00:00, 24.77it/s]Animation 22: Create(SurroundingRectangle), etc.:  47%|████▋     | 14/30 [00:00<00:00, 24.87it/s]Animation 22: Create(SurroundingRectangle), etc.:  57%|█████▋    | 17/30 [00:00<00:00, 26.25it/s]Animation 22: Create(SurroundingRectangle), etc.:  67%|██████▋   | 20/30 [00:00<00:00, 22.62it/s]Animation 22: Create(SurroundingRectangle), etc.:  80%|████████  | 24/30 [00:00<00:00, 25.50it/s]Animation 22: Create(SurroundingRectangle), etc.:  93%|█████████▎| 28/30 [00:01<00:00, 28.09it/s]                                                                                                 [10/14/26 18:40:08] INFO     Animation 22 : Partial     scene_file_writer.py:192
+                             gung/2119445635_3330717721                         
+                             _2431060815.mp4'                                   
+Animation 22: Create(SurroundingRectangle), etc.:   0%|          | 0/30 [00:00<?, ?it/s]Animation 22: Create(SurroundingRectangle), etc.:  17%|█▋        | 5/30 [00:00<00:00, 46.25it/s]Animation 22: Create(SurroundingRectangle), etc.:  33%|███▎      | 10/30 [00:00<00:00, 44.77it/s]Animation 22: Create(SurroundingRectangle), etc.:  50%|█████     | 15/30 [00:00<00:00, 43.20it/s]Animation 22: Create(SurroundingRectangle), etc.:  67%|██████▋   | 20/30 [00:00<00:00, 42.81it/s]Animation 22: Create(SurroundingRectangle), etc.:  83%|████████▎ | 25/30 [00:00<00:00, 43.39it/s]Animation 22: Create(SurroundingRectangle), etc.: 100%|██████████| 30/30 [00:00<00:00, 36.75it/s]                                                                                                 [10/14/26 18:49:36] INFO     Animation 22 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -229,9 +229,9 @@ Manim Community v0.21.0
                              -GLYPHS/checks/ch4_media/v                         
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat3_Erzeu                         
-                             gung/2119445635_2907566163                         
-                             _1324579990.mp4'                                   
-Animation 23: FadeIn(VGroup of 7 submobjects), etc.:   0%|          | 0/15 [00:00<?, ?it/s]Animation 23: FadeIn(VGroup of 7 submobjects), etc.:  27%|██▋       | 4/15 [00:00<00:00, 38.12it/s]Animation 23: FadeIn(VGroup of 7 submobjects), etc.:  53%|█████▎    | 8/15 [00:00<00:00, 37.23it/s]Animation 23: FadeIn(VGroup of 7 submobjects), etc.:  80%|████████  | 12/15 [00:00<00:00, 37.40it/s]                                                                                                    [10/14/26 18:40:10] INFO     Animation 23 : Partial     scene_file_writer.py:192
+                             gung/2119445635_1854990781                         
+                             _3762621849.mp4'                                   
+Animation 23: FadeIn(VGroup of 7 submobjects), etc.:   0%|          | 0/15 [00:00<?, ?it/s]Animation 23: FadeIn(VGroup of 7 submobjects), etc.:  33%|███▎      | 5/15 [00:00<00:00, 44.99it/s]Animation 23: FadeIn(VGroup of 7 submobjects), etc.:  67%|██████▋   | 10/15 [00:00<00:00, 45.07it/s]Animation 23: FadeIn(VGroup of 7 submobjects), etc.: 100%|██████████| 15/15 [00:00<00:00, 46.35it/s]                                                                                                    [10/14/26 18:49:38] INFO     Animation 23 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -240,9 +240,9 @@ Manim Community v0.21.0
                              -GLYPHS/checks/ch4_media/v                         
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat3_Erzeu                         
-                             gung/2119445635_1153334154                         
-                             _3226353187.mp4'                                   
-Animation 24: FadeIn(VGroup of 5 submobjects), etc.:   0%|          | 0/15 [00:00<?, ?it/s]Animation 24: FadeIn(VGroup of 5 submobjects), etc.:  27%|██▋       | 4/15 [00:00<00:00, 36.15it/s]Animation 24: FadeIn(VGroup of 5 submobjects), etc.:  53%|█████▎    | 8/15 [00:00<00:00, 36.24it/s]Animation 24: FadeIn(VGroup of 5 submobjects), etc.:  80%|████████  | 12/15 [00:00<00:00, 35.67it/s]                                                                                                    [10/14/26 18:40:13] INFO     Animation 24 : Partial     scene_file_writer.py:192
+                             gung/2119445635_2271437412                         
+                             _1021080395.mp4'                                   
+Animation 24: FadeIn(VGroup of 5 submobjects), etc.:   0%|          | 0/15 [00:00<?, ?it/s]Animation 24: FadeIn(VGroup of 5 submobjects), etc.:  33%|███▎      | 5/15 [00:00<00:00, 43.40it/s]Animation 24: FadeIn(VGroup of 5 submobjects), etc.:  67%|██████▋   | 10/15 [00:00<00:00, 43.07it/s]Animation 24: FadeIn(VGroup of 5 submobjects), etc.: 100%|██████████| 15/15 [00:00<00:00, 43.08it/s]                                                                                                    [10/14/26 18:49:40] INFO     Animation 24 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -251,9 +251,9 @@ Manim Community v0.21.0
                              -GLYPHS/checks/ch4_media/v                         
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat3_Erzeu                         
-                             gung/2119445635_499356189_                         
-                             1627766112.mp4'                                    
-Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:   0%|          | 0/90 [00:00<?, ?it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:   4%|▍         | 4/90 [00:00<00:02, 35.83it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:   9%|▉         | 8/90 [00:00<00:02, 36.26it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  13%|█▎        | 12/90 [00:00<00:02, 36.42it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  18%|█▊        | 16/90 [00:00<00:02, 36.39it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  22%|██▏       | 20/90 [00:00<00:01, 36.58it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  27%|██▋       | 24/90 [00:00<00:01, 36.54it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  31%|███       | 28/90 [00:00<00:01, 36.59it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  36%|███▌      | 32/90 [00:00<00:01, 36.13it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  40%|████      | 36/90 [00:00<00:01, 36.48it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  44%|████▍     | 40/90 [00:01<00:01, 36.45it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  49%|████▉     | 44/90 [00:01<00:01, 36.58it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  53%|█████▎    | 48/90 [00:01<00:01, 36.71it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  58%|█████▊    | 52/90 [00:01<00:01, 30.82it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  62%|██████▏   | 56/90 [00:01<00:01, 30.28it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  67%|██████▋   | 60/90 [00:01<00:00, 31.44it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  71%|███████   | 64/90 [00:01<00:00, 31.64it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  76%|███████▌  | 68/90 [00:01<00:00, 32.79it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  80%|████████  | 72/90 [00:02<00:00, 33.59it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  84%|████████▍ | 76/90 [00:02<00:00, 34.56it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  89%|████████▉ | 80/90 [00:02<00:00, 35.09it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  93%|█████████▎| 84/90 [00:02<00:00, 35.15it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  98%|█████████▊| 88/90 [00:02<00:00, 35.48it/s]                                                                                                                 [10/14/26 18:40:18] INFO     Animation 25 : Partial     scene_file_writer.py:192
+                             gung/2119445635_3726543859                         
+                             _310654431.mp4'                                    
+Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:   0%|          | 0/90 [00:00<?, ?it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:   6%|▌         | 5/90 [00:00<00:01, 49.81it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  11%|█         | 10/90 [00:00<00:01, 49.33it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  17%|█▋        | 15/90 [00:00<00:01, 48.89it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  22%|██▏       | 20/90 [00:00<00:01, 48.58it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  28%|██▊       | 25/90 [00:00<00:01, 48.55it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  33%|███▎      | 30/90 [00:00<00:01, 48.79it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  39%|███▉      | 35/90 [00:00<00:01, 48.51it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  44%|████▍     | 40/90 [00:00<00:01, 44.44it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  50%|█████     | 45/90 [00:00<00:01, 44.12it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  56%|█████▌    | 50/90 [00:01<00:00, 43.98it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  61%|██████    | 55/90 [00:01<00:00, 43.80it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  67%|██████▋   | 60/90 [00:01<00:00, 43.78it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  72%|███████▏  | 65/90 [00:01<00:00, 43.55it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  78%|███████▊  | 70/90 [00:01<00:00, 43.53it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  83%|████████▎ | 75/90 [00:01<00:00, 43.75it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  89%|████████▉ | 80/90 [00:01<00:00, 44.15it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.:  94%|█████████▍| 85/90 [00:01<00:00, 44.42it/s]Animation 25: UpdateFromAlphaFunc(VGroup of 9 submobjects), etc.: 100%|██████████| 90/90 [00:01<00:00, 44.90it/s]                                                                                                                 [10/14/26 18:49:45] INFO     Animation 25 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -262,9 +262,9 @@ Manim Community v0.21.0
                              -GLYPHS/checks/ch4_media/v                         
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat3_Erzeu                         
-                             gung/2119445635_1731506211                         
-                             _3231774509.mp4'                                   
-Animation 26: FadeOut(VGroup of 2 submobjects):   0%|          | 0/9 [00:00<?, ?it/s]Animation 26: FadeOut(VGroup of 2 submobjects):  33%|███▎      | 3/9 [00:00<00:00, 29.69it/s]Animation 26: FadeOut(VGroup of 2 submobjects):  67%|██████▋   | 6/9 [00:00<00:00, 23.20it/s]Animation 26: FadeOut(VGroup of 2 submobjects): 100%|██████████| 9/9 [00:00<00:00, 25.49it/s]                                                                                             [10/14/26 18:40:20] INFO     Animation 26 : Partial     scene_file_writer.py:192
+                             gung/2119445635_2607067083                         
+                             _2473756014.mp4'                                   
+Animation 26: FadeOut(VGroup of 2 submobjects):   0%|          | 0/9 [00:00<?, ?it/s]Animation 26: FadeOut(VGroup of 2 submobjects):  67%|██████▋   | 6/9 [00:00<00:00, 51.21it/s]                                                                                             [10/14/26 18:49:46] INFO     Animation 26 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -274,8 +274,8 @@ Manim Community v0.21.0
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat3_Erzeu                         
                              gung/2119445635_3282665961                         
-                             _3247513899.mp4'                                   
-[10/14/26 18:40:22] INFO     Animation 27 : Partial     scene_file_writer.py:192
+                             _465078987.mp4'                                    
+[10/14/26 18:49:47] INFO     Animation 27 : Partial     scene_file_writer.py:192
                              movie file written in                              
                              '/Users/niloufarghandehari                         
                              yoon/Developer/semio/.repo                         
@@ -285,9 +285,9 @@ Manim Community v0.21.0
                              ideos/scene_4/480p15/parti                         
                              al_movie_files/Beat3_Erzeu                         
                              gung/2119445635_241228271_                         
-                             3611920683.mp4'                                    
-                    INFO     Combining to Movie file.   scene_file_writer.py:952
-[10/14/26 18:40:23] INFO                               scene_file_writer.py:1103
+                             3309323681.mp4'                                    
+[10/14/26 18:49:48] INFO     Combining to Movie file.   scene_file_writer.py:952
+                    INFO                               scene_file_writer.py:1103
                              File ready at                                      
                              '/Users/niloufarghandehar                          
                              iyoon/Developer/semio/.re                          
@@ -297,5 +297,15 @@ Manim Community v0.21.0
                              dia/videos/scene_4/480p15                          
                              /Beat3_Erzeugung.mp4'                              
                                                                                 
+                    INFO     The partial movie         scene_file_writer.py:1073
+                             directory is full (> 100                           
+                             files). Therefore, manim                           
+                             has removed the 25 oldest                          
+                             file(s). You can change                            
+                             this behaviour by                                  
+                             changing max_files_cached                          
+                             in config.                                         
                     INFO     Rendered Beat3_Erzeugung               scene.py:290
                              Played 28 animations                               
+You are using manim version v0.21.0, but version v0.22.0 is available.
+You should consider upgrading via pip install -U manim

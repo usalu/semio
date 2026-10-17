@@ -1,4 +1,4 @@
-"""🎬 Full Physical Fundamentals video — all nine beats in curriculum order.
+"""🎬 Full Physical Fundamentals video — all eight beats in curriculum order.
 
 Recommended: run this file as a script (beat renders + ffmpeg concat).
 """

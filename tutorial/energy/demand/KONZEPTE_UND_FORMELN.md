@@ -9,7 +9,7 @@ Jedes Kapitel fasst **Lernziel**, **Kernbegriffe**, **Formeln** und **Merksätze
 
 ```mermaid
 flowchart TB
-    PF["0 · Physikalische Grundlagen<br/>kWh · kW · COP · Strahlung · Speicher · Feuchte · Venturi · N"]
+    PF["0 · Physikalische Grundlagen<br/>kWh · kW · COP · Strahlung · Speicher · Feuchte · Lüftung"]
     H1["Heizung Modul 1<br/>Drei Wärmeübertragungswege · U-Wert"]
     H2["Heizung Modul 2<br/>Leitung · R · U"]
     H3["Heizung Modul 3<br/>Konvektion · Lüftung"]
@@ -39,11 +39,11 @@ flowchart TB
 ## 0 · Physikalische Grundlagen
 
 **Titel:** Physikalische Grundlagen  
-**Datei:** `1_physical_fundamentals/scene_1.py` · **9 Beats** (Reihenfolge: `BEATS` in `scene_1.py`)
+**Datei:** `1_physical_fundamentals/scene_1.py` · **8 Beats** (Reihenfolge: `BEATS` in `scene_1.py`)
 
 ### Lernziel
 
-Die Größen der Gebäudeenergie konkret und visuell verstehen — immer am Bauteil, das sie bestimmt: **Energie (kWh)** im Alltag, **Leistung (kW)** als Fläche im Leistung-Zeit-Diagramm, **Energieerhaltung**, **Wärmepumpe/COP** im Vergleich zu anderen Heizsystemen, **Strahlung** am Glas, **thermische Masse** der Decke, **sensible/latente Wärme**, **Venturi-Effekt** an Öffnungen — und zuletzt die **Kraft (N)**, die im Joule steckt.
+Die Größen der Gebäudeenergie konkret und visuell verstehen — immer am Bauteil, das sie bestimmt: **Energie (kWh)** im Alltag, **Leistung (kW)** als Fläche im Leistung-Zeit-Diagramm, **Energieerhaltung**, **Wärmepumpe/COP** im Vergleich zu anderen Heizsystemen, **Strahlung** am Glas, **thermische Masse** der Decke, **sensible/latente Wärme** und der **Lüftungswärmeverlust** an Öffnungen.
 
 ### Beat-Übersicht
 
@@ -56,8 +56,7 @@ Die Größen der Gebäudeenergie konkret und visuell verstehen — immer am Baut
 | 5 | Strahlung — kurzwellig hinein, langwellig gefangen | g-Wert aus Strahlen · Q̇_S = g · A · I · langwellige Rückstrahlung, Low-E · Treibhauseffekt · Sonnenschutz außen |
 | 6 | Thermische Masse — speichern und zeitversetzt abgeben | Q = m · c · ΔT an 1 m² Betondecke · 24-h-Verlauf, Phasenverschiebung, Dämpfung · warum die Decke · Nachtlüftung/Sonnengewinne |
 | 7 | Sensible und latente Wärme | T-Q-Diagramm Wasser · Sättigungskurve x_s(ϑ) · Taupunkt · Mensch 70 W sensibel + 30 W latent · Tauwasser/Entfeuchtung |
-| 8 | Venturi-Effekt — Luft in Bewegung | A₁ · v₁ = A₂ · v₂ · Druckabfall, Sog · Wind über den First · Lage und Größe der Öffnungen · Lüftungswärmeverlust |
-| 9 | Kraft — was in einem Joule steckt | F_G = m · g · W = F · s als Fläche · Herz: 1 N über 1 m pro Sekunde → 1 J → 1 W · 1 000 Herzen = 1 kW · 1 kWh = 3,6 · 10⁶ J |
+| 8 | Lüftung — Wärme geht mit der Luft | Zuluft/Abluft · Volumenstrom V̇ · Q̇_V = ρ · c · V̇ · ΔT · ρ · c ≈ 0,34 Wh/(m³ K) · 100 m³/h bei 20 K = 680 W · Nachtlüftung kühlt das Dach aus |
 
 ### Kernbegriffe
 
@@ -66,9 +65,8 @@ Die Größen der Gebäudeenergie konkret und visuell verstehen — immer am Baut
 | **Kilowattstunde (kWh)** | Energie / verrichtete Arbeit: 1 kW eine Stunde lang | Staubsauger 1 h · ≈ 3 min warm duschen (30 l von 10 auf 38 °C) |
 | **Kurzform** | Im Alltag fällt oft das „h“ weg („4 000 kW verbraucht“) | ohne „h“ ist es eine Leistung, keine Menge |
 | **Kilowatt (kW)** | Leistung = Energie pro Zeit | Staubsauger ≈ 1 kW · Wasserkocher 2 kW · Durchlauferhitzer 18–24 kW |
-| **Watt (W)** | 1 J pro Sekunde | ein Herzschlag pro Sekunde |
-| **Joule (J)** | 1 N über 1 m | Apfel (100 g) 1 m hochheben · ein Herzschlag |
-| **Newton (N)** | Kraft; Gewichtskraft F_G = m · g | Erde zieht an 100 g mit ≈ 1 N |
+| **Watt (W)** | 1 J pro Sekunde | 1 kWh = 1 000 W · 3 600 s = 3,6 Mio. J |
+| **Joule (J)** | Energie: 1 W eine Sekunde lang | 1 kWh = 3,6 Mio. J |
 | **Heizlast** | Spitzenleistung der kältesten Stunde | EFH ≈ 8 kW, DIN EN 12831 |
 | **Heizwärmebedarf** | Fläche unter der Leistungskurve übers Jahr | EFH ≈ 15 000 kWh/a, DIN V 18599 |
 | **COP** | Heizwärme / Strom in einem Betriebspunkt | 1 kWh Strom + 3 kWh Umweltwärme = 4 kWh, DIN EN 14511 |
@@ -80,7 +78,7 @@ Die Größen der Gebäudeenergie konkret und visuell verstehen — immer am Baut
 | **sensible Wärme** | ändert die Temperatur | 1 kg Wasser 0 → 100 °C: 419 kJ |
 | **latente Wärme** | steckt im Phasenwechsel, Temperatur bleibt | Verdampfen 1 kg Wasser: 2 257 kJ |
 | **Taupunkt** | Temperatur, bei der φ = 100 % erreicht wird | 20 °C / 50 % → ≈ 9,3 °C, DIN 4108-3 |
-| **Venturi-Effekt** | Engstelle → schneller → niedrigerer Druck → Sog | halber Querschnitt, doppelte Geschwindigkeit |
+| **Volumenstrom V̇** | Luftvolumen pro Stunde durch das Haus | 100 m³/h bei 20 K → 680 W |
 
 ### Formeln
 
@@ -97,8 +95,7 @@ Die Größen der Gebäudeenergie konkret und visuell verstehen — immer am Baut
 | **m = ρ · A · d** | 2 400 kg/m³ · 1 m² · 0,10 m = 240 kg |
 | **Q_lat = m · r** | 1 kg · 2 257 kJ/kg |
 | **A₁ · v₁ = A₂ · v₂**, **p + ½ ρ v² = konstant** | Kontinuität und Bernoulli |
-| **Q̇_V = 0,34 Wh/(m³ K) · V̇ · ΔT** | 100 m³/h · 20 K → 680 W |
-| **F_G = m · g**, **W = F · s** | 0,1 kg · 9,81 m/s² ≈ 1 N; 1 N · 1 m = 1 J |
+| **Q̇_V = ρ · c · V̇ · ΔT** | ρ · c ≈ 0,34 Wh/(m³ K) · 100 m³/h · 20 K → 680 W |
 
 ### Skalen
 
@@ -140,8 +137,7 @@ Die Größen der Gebäudeenergie konkret und visuell verstehen — immer am Baut
 - Glas lässt **kurzwellig** hinein und hält **langwellig** zurück — Sonnenschutz gehört nach außen.
 - Die **Decke** ist der wirksamste Speicher: frei, von warmer Luft angeströmt, im Strahlungsaustausch mit allen Flächen.
 - **Latente** Wärme ist unsichtbar, aber groß; kühle Flächen unter dem Taupunkt bekommen Tauwasser.
-- Lage und Größe der **Öffnungen** steuern den Luftstrom; jeder m³ trägt Wärme mit.
-- Am Ende steckt in jedem Joule eine **Kraft über einen Weg** — ein Herzschlag ≈ 1 J, einer pro Sekunde ≈ 1 W.
+- Durch die **Öffnungen** strömt Luft; jeder m³ trägt Wärme mit.
 
 ---
 

@@ -14,17 +14,15 @@ if str(_TUTORIAL_ROOT) not in _sys.path:
 from manim_fonts import (
     apply_scene_style, scene_title, play_scene_title, TITLE_RUN_TIME,
     beat_subtitle, BEAT_SUBTITLE_FADE,
-    BODY_FONT_SIZE, LABEL_FONT_SIZE, FORMULA_FONT_SIZE, body_text,
+    BODY_FONT_SIZE, LABEL_FONT_SIZE, body_text,
 )
 from manim_visuals import (
-    P_DEEP_DARK, P_WHITE, P_CYAN, P_TEAL, P_ORANGE, P_YELLOW, P_RED, P_BLUE, P_GREEN,
-    SAFE_TOP, SAFE_BOTTOM_FORMULA, CONTENT_TOP,
-    chip, note_line, card_grid, stat_card, side_labels, stacked_bar, fit_band, dim_arrow,
-    equation_row, formula_panel, highlight_param,
-    math_label, math_panel, math_readout, de_num,
-    caption_bar, swap_caption, hold_for, subtitle_text,
+    P_DEEP_DARK, P_WHITE, P_CYAN, P_TEAL, P_ORANGE, P_YELLOW, P_RED, P_BLUE,
+    note_line, stacked_bar, dim_arrow,
+    math_label, math_panel, de_num,
+    caption_bar, hold_for, subtitle_text,
     set_vo_language, load_vo_timing,
-    room_section, radiator, person_glyph, energy_tank, ripples, droplets,
+    room_section, radiator, person_glyph, ripples, droplets,
 )
 
 set_vo_language("de")
@@ -248,7 +246,9 @@ def _readout(fn, at, *, size: float | None = None, color: str = P_WHITE, edge: s
             return
         state["text"] = text
         place = np.array(at() if callable(at) else at, dtype=float)
-        mob.submobjects = [] if text is None else [math_label(text, place, size=size, color=color, edge=edge)]
+        mob.remove(*list(mob.submobjects))
+        if text is not None:
+            mob.add(math_label(text, place, size=size, color=color, edge=edge))
 
     holder.add_updater(refresh)
     refresh(holder)
@@ -753,7 +753,7 @@ class Beat2_UebergabeVerteilungSpeicherung(Scene):
         rad_tag = math_label(r"\text{Heizkörper}\,\cdot\,55\,\mathrm{°C}", np.array([-4.95, 1.52, 0.0]),
                              size=LABEL_FONT_SIZE, color=UEBER_RED)
         loop = _floor_loop(-2.95, -1.75, room["y_f"] - 0.07)
-        loop_tag = math_label(r"\text{Fußbodenheizung}\,\cdot\,35\,\mathrm{°C}", np.array([-2.55, 1.10, 0.0]),
+        loop_tag = math_label(r"\text{Fußbodenheizung}\,\cdot\,35\,\mathrm{°C}", np.array([-3.00, 1.10, 0.0]),
                               size=LABEL_FONT_SIZE, color=P_CYAN)
         flow_note = note_line("niedrige Vorlauftemperatur → bessere Erzeugereffizienz", color=P_CYAN)
         self.add(P["z0"].ribbons, P["z2"].ribbons, rows["ue"]["readout"], rows["ve"]["readout"], rows["sp"]["readout"])

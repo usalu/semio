@@ -1067,8 +1067,8 @@ class Beat4_WinterUndSommer(Scene):
 
         # —— One envelope, two signs ——
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "beide"))
-        sign_h = chip("Heizen: Jahresbedarf", DEMAND_RED).move_to(np.array([5.45, 0.75, 0.0]))
-        sign_k = chip("Kühlen: Auslegungslast", P_CYAN).move_to(np.array([5.45, 0.1, 0.0]))
+        sign_h = chip("Heizen: Jahresbedarf", DEMAND_RED).move_to(np.array([5.25, 0.75, 0.0]))
+        sign_k = chip("Kühlen: Auslegungslast", P_CYAN).move_to(np.array([5.25, 0.1, 0.0]))
 
         def both(rt):
             return [*summer_flows(rt), *cooling(rt), _stream(supply, DEMAND_RED, rt, period=1.2)]

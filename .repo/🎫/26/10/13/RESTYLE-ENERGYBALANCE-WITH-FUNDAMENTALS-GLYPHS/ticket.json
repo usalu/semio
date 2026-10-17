@@ -3,12 +3,28 @@
   "title": "Restyle Energy Balance Video with Physical Fundamentals Glyphs",
   "slug": "RESTYLE-ENERGYBALANCE-WITH-FUNDAMENTALS-GLYPHS",
   "emoji": "⚖️",
-  "status": "open",
+  "status": "closed",
   "description": "Replace the object drawings and animated effects of the Energy Balance video (house, person, lamp, sun, sun radiation, energy flow) with the Physical Fundamentals vocabulary from tutorial/manim_visuals.py. Narration content stays. Every factor animates 0-1, every equation term is the result of the physical picture, formulas typeset with math_label/math_panel, ideas morph into each other, no overlaps, animations synced with subtitles. Deliver the full video at 1080p60.",
   "goal": "R26-02/UPDATED-DOCS/UPDATED-USER-DOCS/UPDATED-TUTORIALS",
-  "dates": {"due": "2026-10-13", "started": "2026-10-13"},
+  "dates": {
+    "due": "2026-10-13",
+    "started": "2026-10-13",
+    "completed": "2026-10-14"
+  },
   "client": "claude-code",
   "llm": "sonnet-5",
-  "summary": "",
-  "files": {"created": [], "updated": [], "removed": []}
+  "summary": "All seven Energy Balance chapters redraw with the Physical Fundamentals glyphs (house_section, person_glyph at true scale, sun_glyph with straight rays, lamp, thermometer, ripples, particle flows) and typeset every formula with math_label/math_panel. Factors animate 0-1, equation terms come from drawn readouts, ideas morph into each other. NARRATION and beat names unchanged. Full video rendered at 1080p60 (22:20, silent, intro + 7 chapters) to tutorial/energy/demand/EnergyBalance/rendered/Full_EnergyBalance_1080p60.mp4. Open: 5 German subtitles wrap to 3 lines; chapters 1-3,5-7 have no vo_timing.json; repo MCP was down so ticket kept by hand.",
+  "files": {
+    "created": [],
+    "updated": [
+      "tutorial/energy/demand/EnergyBalance/1_recap_heizen_kuehlen/scene_1.py",
+      "tutorial/energy/demand/EnergyBalance/2_regulatory_framework/scene_2.py",
+      "tutorial/energy/demand/EnergyBalance/3_bedarf_vs_leistung/scene_3.py",
+      "tutorial/energy/demand/EnergyBalance/4_system_losses/scene_4.py",
+      "tutorial/energy/demand/EnergyBalance/5_primary_energy/scene_5.py",
+      "tutorial/energy/demand/EnergyBalance/6_energieausweis/scene_6.py",
+      "tutorial/energy/demand/EnergyBalance/7_praxis_vs_theorie/scene_7.py"
+    ],
+    "removed": []
+  }
 }

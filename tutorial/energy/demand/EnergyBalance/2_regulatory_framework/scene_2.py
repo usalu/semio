@@ -965,7 +965,7 @@ class Beat4_Gradtagszahl(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "heizgrenze"))
         limit = DashedLine(chart["pt"](0.0, limit_f), chart["pt"](1.0, limit_f), color=P_ORANGE, stroke_width=2.5)
         limit_tag = math_label(r"\theta_{HG}=15\,\mathrm{°C}", size=BODY_FONT_SIZE, color=P_ORANGE)
-        limit_tag.next_to(chart["pt"](1.0, limit_f), UP, buff=0.10).align_to(chart["pt"](1.0, limit_f), RIGHT)
+        limit_tag.next_to(chart["pt"](0.0, limit_f), UP, buff=0.16).align_to(chart["pt"](0.0, limit_f), LEFT).shift(RIGHT * 0.1)
         mark_y = st["therm"]["top"][1] - 1.30 + 0.05 + (1.30 - 0.12) * limit_f
         therm_mark = Line(np.array([THERMO_X - 0.2, mark_y, 0.0]), np.array([THERMO_X + 0.2, mark_y, 0.0]),
                           color=P_ORANGE, stroke_width=3)
@@ -1000,8 +1000,8 @@ class Beat4_Gradtagszahl(Scene):
         g_cold, g_mild, g_ref = _degree_days(12.0, -2.0), _degree_days(12.0, 2.0), _degree_days(12.0)
         cold = _curve(chart, lambda x: _theta_norm(_catmull(THETA_E, x) - 2.0), P_BLUE, width=3.0)
         mild = _curve(chart, lambda x: _theta_norm(_catmull(THETA_E, x) + 2.0), P_CYAN, width=3.0)
-        cold_area = self._degree_area(chart, ValueTracker(12.0), 0.0, shift=-2.0, color=P_BLUE, opacity=0.34)
-        mild_area = self._degree_area(chart, ValueTracker(12.0), 0.0, shift=2.0, color=P_CYAN, opacity=0.34)
+        cold_area = self._degree_area(chart, ValueTracker(12.0), 0.0, shift=-2.0, color=P_BLUE, opacity=0.22)
+        mild_area = self._degree_area(chart, ValueTracker(12.0), 0.0, shift=2.0, color=P_CYAN, opacity=0.22)
         cold_area.clear_updaters()
         mild_area.clear_updaters()
         cold_gt = math_label(rf"G_{{t,\mathrm{{kalt}}}}={de_num(g_cold, 0)}\,\mathrm{{Kd/a}}", size=BODY_FONT_SIZE,

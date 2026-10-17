@@ -249,7 +249,7 @@ class Beat1_BerechnungVsAbrechnung(Scene):
         cloud_base = cloud_glyph(cloud_core, pad=(0.42, 0.26), bump=0.40)
         cloud_base.set_fill(P_DEEP_DARK, opacity=0.95)
         cloud = cloud_base.copy()
-        cloud_far, cloud_near = np.array([5.00, 1.70, 0.0]), np.array([-1.66, 1.14, 0.0])
+        cloud_far, cloud_near = np.array([5.70, 1.45, 0.0]), np.array([-1.66, 1.14, 0.0])
 
         def _place_cloud(mob):
             k = float(cover.get_value())
